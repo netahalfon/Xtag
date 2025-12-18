@@ -13,7 +13,7 @@ export default async function WorkerSettingsPage() {
 
   const { data: userData } = await supabase.from("users").select("role").eq("id", user.id).single()
 
-  if (!userData || userData.role !== "worker") {
+  if (!userData) {
     redirect("/")
   }
 

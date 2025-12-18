@@ -1,0 +1,43 @@
+.nav_item {
+  height: 40px;
+  padding: 0 16px;
+  margin: 0 5px;
+
+  display: inline-flex;
+  align-items: center;
+
+  color: #000;
+  font-size: 16px;
+  font-weight: 600; /* בולד */
+  text-decoration: none;
+  border-radius: 999px;
+
+  border: 2px solid transparent; /* כדי שלא יקפוץ בגובה */
+}
+
+.nav_item:hover {
+  background: rgba(213, 98, 16, 0.12);
+}
+
+.nav_item_active {
+  background: rgba(234, 90, 36, 0.09);
+  color: #000;
+  border: 2px solid #dc7609; /* קו עגול שמקיף */
+}
+
+.logout_button {
+  height: 40px;
+  padding: 0 16px;
+  margin: 0 5px;
+
+  display: inline-flex;
+  align-items: center;
+
+  color: #dc7609;
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 999px;
+  border: 2px solid #dc7609;
+  background: transparent;
+}

@@ -13,8 +13,12 @@ export default async function ManagerAddShiftsPage() {
 
   const { data: userData } = await supabase.from("users").select("role").eq("id", user.id).single()
 
-  if (!userData || userData.role !== "manager") {
+  if (!userData) {
     redirect("/")
+  }
+
+  if (userData.role !== "manager" && userData.role !== "admin") {
+    redirect("/worker/my-salary")
   }
 
   return (
