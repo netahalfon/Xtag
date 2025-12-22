@@ -7,8 +7,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import LogoutModal from "./logout-modal";
-import { Menu, X } from "lucide-react"
-
+import { Menu, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const navItemsWorker = [
   { name: "My Salary", href: "/worker/my-salary" },
@@ -42,6 +42,7 @@ export function Navbar() {
 
   const handleConfirmLogout = async () => {
     try {
+      //logout logic
       const supabase = createClient();
       await supabase.auth.signOut();
       router.push("/auth/login");
@@ -96,96 +97,180 @@ export function Navbar() {
   };
 
   return (
-    <header className="navbar navbar-expand-lg bg-white border-bottom py-4">
-      <div className="container flex h-16 items-center justify-between">
-        {/* לוגו ושם */}
-        <Link className="navbar-brand" href="/worker/my-salary">
-          <img
-            src="/xtag-icon.svg"
-            alt="Logo"
-            height="35"
-            width="80"
-            className="d-inline-block align-text-top"
-          />
-        </Link>
+    <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex h-20 items-center justify-between">
+          {/* Logo */}
+          <Link href="/worker/my-salary" className="flex-shrink-0">
+            <img
+              src="/xtag-icon.svg"
+              alt="Xtag Logo"
+              height="35"
+              width="80"
+              className="h-8"
+            />
+          </Link>
 
-        {/* תפריט למסכים גדולים */}
-        {user && role === "worker" && (
-          <nav className="hidden lg:flex items-center gap-6">
-            <>
+          {/* Desktop Navigation */}
+          {user && role === "worker" && (
+            <nav className="hidden md:flex items-center gap-8">
               {navItemsWorker.map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
                   className={cn(
-                    "btn nav_item ",
-                    pathname === item.href ? "bg-amber-500" : ""
+                    "text-base font-normal transition-colors pb-1",
+                    pathname === item.href
+                      ? "text-blue-600 border-b-2 border-blue-600"
+                      : "text-gray-700 hover:text-blue-600"
                   )}
                 >
                   {item.name}
                 </Link>
               ))}
-
-              <button onClick={handleLogoutButton} className="logout_button">
+              <button
+                onClick={handleLogoutButton}
+                className="ml-4 px-6 py-2 text-base font-normal text-orange-600 border-2 border-orange-600 hover:bg-orange-50 transition-colors"
+              >
                 Log out
               </button>
-            </>
-          </nav>
-        )}
+            </nav>
+          )}
 
-        {user && role === "manager" && (
-          <nav className="hidden lg:flex items-center gap-6">
-            <>
+          {user && role === "manager" && (
+            <nav className="hidden md:flex items-center gap-8">
               {navItemsManager.map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
                   className={cn(
-                    "btn nav_item ",
-                    pathname === item.href ? "bg-amber-500" : ""
+                    "text-base font-normal transition-colors pb-1",
+                    pathname === item.href
+                      ? "text-blue-600 border-b-2 border-blue-600"
+                      : "text-gray-700 hover:text-blue-600"
                   )}
                 >
                   {item.name}
                 </Link>
               ))}
-
-              <button onClick={handleLogoutButton} className="logout_button">
+              <button
+                onClick={handleLogoutButton}
+                className="ml-4 px-6 py-2 text-base font-normal text-orange-600 border-2 border-orange-600 hover:bg-orange-50 transition-colors"
+              >
                 Log out
               </button>
-            </>
-          </nav>
-        )}
+            </nav>
+          )}
 
-        {user && role === "admin" && (
-          <nav className="hidden lg:flex items-center gap-6">
-            <>
+          {user && role === "admin" && (
+            <nav className="hidden md:flex items-center gap-8">
               {navItemsAdmin.map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
                   className={cn(
-                    "btn nav_item ",
-                    pathname === item.href ? "bg-amber-500" : ""
+                    "text-base font-normal transition-colors pb-1",
+                    pathname === item.href
+                      ? "text-blue-600 border-b-2 border-blue-600"
+                      : "text-gray-700 hover:text-blue-600"
                   )}
                 >
                   {item.name}
                 </Link>
               ))}
-
-              <button onClick={handleLogoutButton} className="logout_button">
+              <button
+                onClick={handleLogoutButton}
+                className="ml-4 px-6 py-2 text-base font-normal text-orange-600 border-2 border-orange-600 hover:bg-orange-50 transition-colors"
+              >
                 Log out
               </button>
-            </>
-          </nav>
-        )}
+            </nav>
+          )}
 
-        {showLogoutModal && (
-          <LogoutModal
-            onConfirm={handleConfirmLogout}
-            onCancel={handleCancelLogout}
-          />
+          {user && (
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="md:hidden p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+              aria-label="Toggle menu"
+            >
+              {menuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
+            </button>
+          )}
+        </div>
+
+        {user && menuOpen && (
+          <div className="md:hidden pb-4 border-t border-gray-200 mt-2">
+            <nav className="flex flex-col gap-1 pt-4">
+              {role === "worker" &&
+                navItemsWorker.map((item) => (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    onClick={() => setMenuOpen(false)}
+                    className={cn(
+                      "px-4 py-3 text-base font-normal transition-colors",
+                      pathname === item.href
+                        ? "text-blue-600 bg-blue-50"
+                        : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
+                    )}
+                  >
+                    {item.name}
+                  </Link>
+                ))}
+              {role === "manager" &&
+                navItemsManager.map((item) => (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    onClick={() => setMenuOpen(false)}
+                    className={cn(
+                      "px-4 py-3 text-base font-normal transition-colors",
+                      pathname === item.href
+                        ? "text-blue-600 bg-blue-50"
+                        : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
+                    )}
+                  >
+                    {item.name}
+                  </Link>
+                ))}
+              {role === "admin" &&
+                navItemsAdmin.map((item) => (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    onClick={() => setMenuOpen(false)}
+                    className={cn(
+                      "px-4 py-3 text-base font-normal transition-colors",
+                      pathname === item.href
+                        ? "text-blue-600 bg-blue-50"
+                        : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
+                    )}
+                  >
+                    {item.name}
+                  </Link>
+                ))}
+
+              <button
+                onClick={handleLogoutButton}
+                className="mt-2 mx-4 px-6 py-2 text-base font-normal text-orange-600 border-2 border-orange-600 hover:bg-orange-50 transition-colors text-center"
+              >
+                Log out
+              </button>
+            </nav>
+          </div>
         )}
       </div>
+
+      {showLogoutModal && (
+        <LogoutModal
+          onConfirm={handleConfirmLogout}
+          onCancel={handleCancelLogout}
+        />
+      )}
     </header>
   );
 }
