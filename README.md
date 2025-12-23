@@ -15,59 +15,72 @@ while roles and business logic are managed here.
 
 ### User Fields
 
-- **fullName** (string)  
-  Full name of the employee.
+- **id** (uuid)  
+  Unique identifier of the user (linked to `auth.users.id`).
 
-- **phone** (string)  
+- **email** (text)  
+  User email address (managed by Supabase Auth).
+
+- **full_name** (text)  
+  Official full name of the employee.  
+  Used for payroll and official documents.  
+  Editable by admin only.
+
+- **role** (text)  
+  User role in the system (`worker`, `manager`, `admin`).  
+  Controlled by the database and protected by RLS.
+
+- **created_at** (timestamptz)  
+  Timestamp of user creation.
+
+- **phone** (text)  
   Contact phone number.
 
-- **email** (string)  
-  User email (linked to Supabase Auth).
+- **birth_date** (date)  
+  Employee date of birth.
 
-- **birthDate** (string, YYYY-MM-DD)  
-  Date of birth.
-
-- **idNumber** (string)  
-  Government ID number.
-
-- **city** (string)  
+- **city** (text)  
   City of residence.
 
-- **notes** (string, optional)  
-  Internal notes about the employee.
+- **notes** (text)  
+  Internal administrative notes.  
+  Visible and editable by admin only.
 
-- **salaryRegular** (number)  
-  Hourly salary for a regular worker.
+- **salary_regular** (numeric)  
+  Hourly salary when working as a regular employee.  
+  Admin only.
 
-- **salaryManager** (number)  
-  Hourly salary when acting as a manager.
+- **salary_manager** (numeric)  
+  Hourly salary when working as a manager.  
+  Admin only.
 
-- **role** (UserRole)  
-  User role in the system (`worker` / `manager` / `admin`).  
-  This field is controlled by the database and protected by RLS.
+- **form101_pdf_path** (text)  
+  Path to the employee’s Form 101 PDF stored in Supabase Storage.  
+  The file is private and accessed via signed URLs.
 
-- **form101PdfUrl** (string, optional)  
-  URL to the uploaded Form 101 PDF.
+- **bank_name** (text)  
+  Name of the employee’s bank.
 
-- **bankBranchNumber** (string)  
+- **bank_branch_number** (text)  
   Bank branch number.
 
-- **bankAccountNumber** (string)  
+- **bank_account_number** (text)  
   Bank account number.
 
 ---
 
 ## Shifts Schema
 
-The `shifts` schema stores all work shift data and salary calculations.
+The `shifts` schema stores all work shifts and salary calculation data.
+Each shift is linked to a specific employee using the user UUID.
 
 ### Shift Fields
 
-- **employeeId**  
-  ID of the employee (FK → users).
+- **employee_id**  
+  ID of the employee (FK → `users.id`).
 
-- **employeeName**  
-  Full name of the employee.
+- **employee_name**  
+  Employee name at the time of the shift (for display and reporting).
 
 - **date**  
   Shift date.
@@ -75,34 +88,5 @@ The `shifts` schema stores all work shift data and salary calculations.
 - **location**  
   Work location.
 
-- **startTime**  
+- **start_time**  
   Shift start time.
-
-- **endTime**  
-  Shift end time.
-
-- **role**  
-  Role during the shift (`worker` / `manager`).
-
-- **shiftManager**  
-  Name or ID of the shift manager.
-
-- **hourlySalary**  
-  Salary per hour for this shift.
-
-- **extras**  
-  Additional payments or bonuses.
-
-- **finalSalary**  
-  Final calculated salary, including travel expenses.
-
----
-
-## Security Notes
-
-- User roles are **not controlled by the client**.
-- All role changes are restricted via **Row Level Security (RLS)**.
-- Shift data access is scoped according to user role and permissions.
-
----
-
