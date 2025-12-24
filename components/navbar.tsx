@@ -10,19 +10,19 @@ import { cn } from "@/lib/utils";
 import LogoutModal from "./logout-modal";
 
 const navItemsWorker = [
-  { name: "My Salary", href: "/worker/my-salary" },
-  { name: "Settings", href: "/worker/settings" },
+  { name: "המשכורת שלי", href: "/worker/my-salary" },
+  { name: "פרופיל", href: "/worker/settings" },
 ];
 
 const navItemsManager = [
   ...navItemsWorker,
-  { name: "Add Shifts", href: "/manager/add-shifts" },
+  { name: "הוספת משמרת", href: "/manager/add-shifts" },
 ];
 
 const navItemsAdmin = [
   ...navItemsManager,
-  { name: "All Shifts", href: "/admin/all-shifts" },
-  { name: "All Workers", href: "/admin/all-workers" },
+  { name: "כל המשמרות", href: "/admin/all-shifts" },
+  { name: "כל העובדים", href: "/admin/all-workers" },
 ];
 
 type Role = "worker" | "manager" | "admin" | null;
@@ -143,7 +143,7 @@ export function Navbar() {
                 className="ml-4 rounded-full px-6 py-2 text-base font-medium text-orange-600 border-2 border-orange-600 hover:bg-orange-600
     hover:text-white transition-colors"
               >
-                Log out
+                התנתקות
               </button>
             </nav>
           )}
@@ -188,7 +188,7 @@ export function Navbar() {
                 onClick={handleLogoutButton}
                 className="mt-2 mx-4 px-6 py-2 text-base font-normal text-orange-600 border-2 border-orange-600 hover:bg-orange-50 transition-colors text-center"
               >
-                Log out
+                התנתקות
               </button>
             </nav>
           </div>
