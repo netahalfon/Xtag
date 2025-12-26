@@ -24,6 +24,26 @@ type WorkerProfile = {
   role?: string; // מגיע מה-select, לא חייבים להשתמש ב-UI
 };
 
+const bankNames = [
+  'בנק יהב לעובדי המדינה בע"מ (מספר בנק - 4)',
+  'בנק לאומי לישראל בע"מ (מספר בנק - 10)',
+  'בנק דיסקונט לישראל בע"מ (מספר בנק - 11)',
+  'בנק הפועלים בע"מ (מספר בנק - 12)',
+  'בנק אגוד לישראל בע"מ (מספר בנק - 13)',
+  'בנק אוצר החייל בע"מ (מספר בנק - 14)',
+  'בנק מרכנתיל דיסקונט בע"מ (מספר בנק - 17)',
+  'בנק מזרחי טפחות בע"מ (מספר בנק - 20)',
+  "בנק הדואר (מספר בנק - 9)",
+  "Citibank N.A (מספר בנק - 22)",
+  "HSBC Bank plc (מספר בנק - 23)",
+  'יובנק בע"מ (מספר בנק - 26)',
+  "Barclays Bank PLC (מספר בנק - 27)",
+  'הבנק הבינלאומי הראשון לישראל בע"מ (מספר בנק - 31)',
+  'בנק מסד בע"מ (מספר בנק - 46)',
+  'בנק ירושלים בע"מ (מספר בנק - 54)',
+  "בנק ישראל (מספר בנק - 99)",
+];
+
 export default function WorkerSettingsClient({
   initialUserData,
 }: {
@@ -52,19 +72,19 @@ export default function WorkerSettingsClient({
     setUploadingFile(true);
 
     try {
-    const fd = new FormData();
-    fd.append("file", file);
+      const fd = new FormData();
+      fd.append("file", file);
 
-    const res = await uploadForm101(fd);
+      const res = await uploadForm101(fd);
 
-    setUserData((prev) => ({ ...prev, form101_pdf_path: res.filePath }));
-    setEditedData((prev) => ({ ...prev, form101_pdf_path: res.filePath }));
-  } catch (err: any) {
-    alert(err?.message ?? "שגיאה בהעלאה");
-  } finally {
-    setUploadingFile(false);
-  }
-};
+      setUserData((prev) => ({ ...prev, form101_pdf_path: res.filePath }));
+      setEditedData((prev) => ({ ...prev, form101_pdf_path: res.filePath }));
+    } catch (err: any) {
+      alert(err?.message ?? "שגיאה בהעלאה");
+    } finally {
+      setUploadingFile(false);
+    }
+  };
 
   const handleSave = () => {
     setUserData(editedData);
@@ -80,7 +100,7 @@ export default function WorkerSettingsClient({
   const currentData = isEditing ? editedData : userData;
 
   return (
-    <div className="min-h-screen bg-white py-8 px-4">
+    <div className="min-h-screen bg-white py-8 px-4" dir="rtl">
       <div className="max-w-3xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-black mb-2">הגדרות פרופיל</h1>
@@ -225,16 +245,28 @@ export default function WorkerSettingsClient({
             {/* Bank Name - Editable */}
             <div>
               <Label className="text-black font-medium">שם הבנק</Label>
-              <Input
-                value={currentData.bank_name}
+
+              <select
+                value={currentData.bank_name || ""}
                 onChange={(e) => handleInputChange("bank_name", e.target.value)}
                 disabled={!isEditing}
-                className={
-                  isEditing
-                    ? "border-orange-500 focus-visible:ring-orange-500"
-                    : "border-gray-200"
-                }
-              />
+                className={`w-full h-10 px-3 rounded-md border text-sm
+      ${
+        isEditing
+          ? "border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
+          : "border-gray-200 bg-gray-100"
+      }`}
+              >
+                <option value="" disabled>
+                  בחר בנק
+                </option>
+
+                {bankNames.map((bank) => (
+                  <option key={bank} value={bank}>
+                    {bank}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Bank Branch Number - Editable */}
