@@ -1,5 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
+import WorkerSettingsClient from "../settings/worker-settings-client"
+
 
 export default async function WorkerSettingsPage() {
   const supabase = await createClient()
@@ -11,24 +13,18 @@ export default async function WorkerSettingsPage() {
     redirect("/auth/login")
   }
 
-  const { data: userData } = await supabase.from("users").select("role").eq("id", user.id).single()
+  const { data: profile, error } = await supabase
+    .from("users")
+    .select(
+      "email, full_name, phone, birth_date, city, form101_pdf_path, bank_name, bank_branch_number, bank_account_number, role"
+    )
+    .eq("id", user.id)
+    .single();
 
-  if (!userData) {
-    redirect("/")
-  }
+  if (error || !profile) redirect("/");
 
   return (
-    <div className="container mt-5">
-      <div className="row justify-content-center">
-        <div className="col-md-8">
-          <div className="card shadow">
-            <div className="card-body text-center p-5">
-              <h1 className="card-title display-4 mb-3">Settings</h1>
-              <p className="lead text-muted">??? Coming Soon</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+      <WorkerSettingsClient initialUserData={profile} />
+
   )
 }
