@@ -60,8 +60,7 @@ export async function uploadForm101(formData: FormData) {
   const { error: dbError } = await supabase
     .from("users")
     .update({
-      form101_pdf_path: filePath,
-      updated_at: new Date().toISOString(),
+      form101_pdf_path: filePath
     })
     .eq("id", user.id);
 
