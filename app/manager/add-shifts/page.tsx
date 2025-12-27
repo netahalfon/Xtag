@@ -1,5 +1,12 @@
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
+import ManagerAddShiftsClient from "./manager-add-shifts-client";
+
+type UserRow = {
+  id: string;
+  email: string;
+  full_name: string;
+};
 
 export default async function ManagerAddShiftsPage() {
   const supabase = await createClient()
@@ -21,18 +28,22 @@ export default async function ManagerAddShiftsPage() {
     redirect("/worker/my-salary")
   }
 
-  return (
-    <div className="container mt-5">
-      <div className="row justify-content-center">
-        <div className="col-md-8">
-          <div className="card shadow">
-            <div className="card-body text-center p-5">
-              <h1 className="card-title display-4 mb-3">Add Shifts</h1>
-              <p className="lead text-muted">??? Coming Soon</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
+  // Fetch users from DB
+  const { data, error } = await supabase
+    .from("users")
+    .select("id,email,full_name")
+    .order("full_name", { ascending: true });
+
+  if (error) throw new Error(error.message);
+
+  const users: UserRow[] = (data ?? []).map((u) => ({
+    id: u.id,
+    email: u.email,
+    full_name: u.full_name,
+  }));
+
+  console.log("Users:", users);
+
+  return <ManagerAddShiftsClient workers={users} />;
+ 
 }
