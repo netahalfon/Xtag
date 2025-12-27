@@ -48,10 +48,11 @@ export async function uploadForm101(formData: FormData) {
   if (file.type !== "application/pdf") throw new Error("Only PDF allowed");
 
   const fileExt = file.name.split(".").pop() ?? "pdf";
-  const filePath = `${user.id}/form101.${fileExt}`;
+  const year = new Date().getFullYear();
+  const filePath = `${year}/${user.id}/form101.${fileExt}`;
 
   const { error: uploadError } = await supabase.storage
-    .from("form101") // bucket name
+    .from("forms101") // bucket name
     .upload(filePath, file, { upsert: true, contentType: "application/pdf" });
 
   if (uploadError) throw new Error(uploadError.message);
