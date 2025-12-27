@@ -284,7 +284,7 @@ export default function WorkerSettingsClient({
           </CardContent>
         </Card>
 
-        {/* Personal Information */}
+        {/* Form 101 Information */}
         <Card className="mb-6 border-gray-200">
           <CardHeader className="border-b border-gray-200">
             <CardTitle className="text-xl text-black">טופס 101</CardTitle>
@@ -292,7 +292,6 @@ export default function WorkerSettingsClient({
           <CardContent className="pt-6 space-y-4">
             {/* Form 101 Upload Status - Read-only */}
             <div>
-              <Label className="text-black font-medium">טופס 101</Label>
               <div className="mt-1.5 space-y-2">
                 <div className="flex items-center gap-2">
                   <Badge
