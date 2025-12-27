@@ -13,6 +13,7 @@ export type WorkerProfileUpdate = {
 };
 
 export async function updateWorkerProfile(update: WorkerProfileUpdate) {
+  
   const supabase = await createClient();
 
   const {
@@ -24,16 +25,7 @@ export async function updateWorkerProfile(update: WorkerProfileUpdate) {
 
   const { error } = await supabase
     .from("users")
-    .update({
-      phone: update.phone,
-      birth_date: update.birth_date,
-      city: update.city,
-      bank_name: update.bank_name,
-      bank_branch_number: update.bank_branch_number,
-      bank_account_number: update.bank_account_number,
-      form101_pdf_path: update.form101_pdf_path,
-      updated_at: new Date().toISOString(),
-    })
+    .update(update)
     .eq("id", user.id);
 
   if (error) throw new Error(error.message);

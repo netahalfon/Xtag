@@ -1,16 +1,15 @@
-import { createClient } from "@/lib/supabase/server"
-import { redirect } from "next/navigation"
-import WorkerSettingsClient from "../settings/worker-settings-client"
-
+import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
+import WorkerSettingsClient from "../settings/worker-settings-client";
 
 export default async function WorkerSettingsPage() {
-  const supabase = await createClient()
+  const supabase = await createClient();
   const {
     data: { user },
-  } = await supabase.auth.getUser()
+  } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/auth/login")
+    redirect("/auth/login");
   }
 
   const { data: profile, error } = await supabase
@@ -22,9 +21,6 @@ export default async function WorkerSettingsPage() {
     .single();
 
   if (error || !profile) redirect("/");
-
-  return (
-      <WorkerSettingsClient initialUserData={profile} />
-
-  )
+  console.log("Profile data:", profile);
+  return <WorkerSettingsClient initialUserData={profile} />;
 }

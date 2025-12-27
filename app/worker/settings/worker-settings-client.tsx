@@ -87,9 +87,25 @@ export default function WorkerSettingsClient({
   };
 
   const handleSave = () => {
-    setUserData(editedData);
-    setIsEditing(false);
-    console.log("Saving data:", editedData);
+    console.log("[WorkerSettings] Save clicked. payload:", editedData);
+    startTransition(async () => {
+      try {
+        await updateWorkerProfile({
+          phone: editedData.phone,
+          birth_date: editedData.birth_date,
+          city: editedData.city,
+          bank_name: editedData.bank_name,
+          bank_branch_number: editedData.bank_branch_number,
+          bank_account_number: editedData.bank_account_number,
+          form101_pdf_path: editedData.form101_pdf_path,
+        });
+
+        setUserData(editedData);
+        setIsEditing(false);
+      } catch (err: any) {
+        alert(err?.message ?? "שגיאה בשמירה");
+      }
+    });
   };
 
   const handleCancel = () => {
@@ -118,7 +134,7 @@ export default function WorkerSettingsClient({
               <Label className="text-black font-medium">אימייל</Label>
               <div className="flex items-center gap-2 mt-1.5">
                 <Input
-                  value={currentData.email}
+                  value={currentData.email ?? ""}
                   readOnly
                   className="bg-gray-50 text-gray-600 cursor-not-allowed border-gray-200"
                 />
@@ -136,7 +152,7 @@ export default function WorkerSettingsClient({
               <Label className="text-black font-medium">שם מלא</Label>
               <div className="flex items-center gap-2 mt-1.5">
                 <Input
-                  value={currentData.full_name}
+                  value={currentData.full_name ?? ""}
                   readOnly
                   className="bg-gray-50 text-gray-600 cursor-not-allowed border-gray-200"
                 />
@@ -153,7 +169,7 @@ export default function WorkerSettingsClient({
             <div>
               <Label className="text-black font-medium">טלפון</Label>
               <Input
-                value={currentData.phone}
+                value={currentData.phone ?? ""}
                 onChange={(e) => handleInputChange("phone", e.target.value)}
                 disabled={!isEditing}
                 className={
@@ -169,7 +185,7 @@ export default function WorkerSettingsClient({
               <Label className="text-black font-medium">תאריך לידה</Label>
               <Input
                 type="date"
-                value={currentData.birth_date}
+                value={currentData.birth_date ?? ""}
                 onChange={(e) =>
                   handleInputChange("birth_date", e.target.value)
                 }
@@ -186,7 +202,7 @@ export default function WorkerSettingsClient({
             <div>
               <Label className="text-black font-medium">עיר</Label>
               <Input
-                value={currentData.city}
+                value={currentData.city ?? ""}
                 onChange={(e) => handleInputChange("city", e.target.value)}
                 disabled={!isEditing}
                 className={
@@ -195,43 +211,6 @@ export default function WorkerSettingsClient({
                     : "border-gray-200"
                 }
               />
-            </div>
-
-            {/* Form 101 Upload Status - Read-only */}
-            <div>
-              <Label className="text-black font-medium">טופס 101</Label>
-              <div className="mt-1.5 space-y-2">
-                <div className="flex items-center gap-2">
-                  <Badge
-                    className={
-                      currentData.form101_pdf_path
-                        ? "bg-orange-100 text-orange-700"
-                        : "bg-gray-100 text-gray-600"
-                    }
-                  >
-                    {currentData.form101_pdf_path ? "הועלה" : "לא הועלה"}
-                  </Badge>
-                  {currentData.form101_pdf_path && (
-                    <span className="text-sm text-gray-600">
-                      {currentData.form101_pdf_path}
-                    </span>
-                  )}
-                </div>
-                {!currentData.form101_pdf_path && (
-                  <div>
-                    <Input
-                      type="file"
-                      accept="application/pdf"
-                      onChange={handleFileUpload}
-                      disabled={uploadingFile}
-                      className="cursor-pointer file:mr-4 file:px-4 file:py-2 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-orange-500 file:text-white hover:file:bg-orange-600 file:cursor-pointer"
-                    />
-                    {uploadingFile && (
-                      <p className="text-sm text-orange-600 mt-1">מעלה...</p>
-                    )}
-                  </div>
-                )}
-              </div>
             </div>
           </CardContent>
         </Card>
@@ -273,7 +252,7 @@ export default function WorkerSettingsClient({
             <div>
               <Label className="text-black font-medium">מספר סניף</Label>
               <Input
-                value={currentData.bank_branch_number}
+                value={currentData.bank_branch_number ?? ""}
                 onChange={(e) =>
                   handleInputChange("bank_branch_number", e.target.value)
                 }
@@ -290,7 +269,7 @@ export default function WorkerSettingsClient({
             <div>
               <Label className="text-black font-medium">מספר חשבון</Label>
               <Input
-                value={currentData.bank_account_number}
+                value={currentData.bank_account_number ?? ""}
                 onChange={(e) =>
                   handleInputChange("bank_account_number", e.target.value)
                 }
@@ -301,6 +280,51 @@ export default function WorkerSettingsClient({
                     : "border-gray-200"
                 }
               />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Personal Information */}
+        <Card className="mb-6 border-gray-200">
+          <CardHeader className="border-b border-gray-200">
+            <CardTitle className="text-xl text-black">טופס 101</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6 space-y-4">
+            {/* Form 101 Upload Status - Read-only */}
+            <div>
+              <Label className="text-black font-medium">טופס 101</Label>
+              <div className="mt-1.5 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Badge
+                    className={
+                      currentData.form101_pdf_path
+                        ? "bg-orange-100 text-orange-700"
+                        : "bg-gray-100 text-gray-600"
+                    }
+                  >
+                    {currentData.form101_pdf_path ? "הועלה" : "לא הועלה"}
+                  </Badge>
+                  {currentData.form101_pdf_path && (
+                    <span className="text-sm text-gray-600">
+                      {currentData.form101_pdf_path}
+                    </span>
+                  )}
+                </div>
+                {!currentData.form101_pdf_path && (
+                  <div>
+                    <Input
+                      type="file"
+                      accept="application/pdf"
+                      onChange={handleFileUpload}
+                      disabled={uploadingFile}
+                      className="cursor-pointer file:mr-4 file:px-4 file:py-2 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-orange-500 file:text-white hover:file:bg-orange-600 file:cursor-pointer"
+                    />
+                    {uploadingFile && (
+                      <p className="text-sm text-orange-600 mt-1">מעלה...</p>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -317,9 +341,11 @@ export default function WorkerSettingsClient({
             <>
               <Button
                 onClick={handleSave}
+                disabled={isPending}
+                variant="outline"
                 className="bg-orange-500 hover:bg-orange-600 text-white"
               >
-                שמור שינויים
+                {isPending ? "שומר..." : "שמור שינויים"}{" "}
               </Button>
               <Button
                 onClick={handleCancel}
