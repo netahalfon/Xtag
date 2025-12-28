@@ -1,77 +1,118 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card } from "@/components/ui/card"
-import { Plus, X, Calendar, MapPin, Users, Clock } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card } from "@/components/ui/card";
+import { Plus, X, Calendar, MapPin, Users, Clock } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { createShiftsAction } from "./actions";
 
 type Worker = {
-  id: string
-  email: string
-  full_name: string
-}
+  id: string;
+  email: string;
+  full_name: string;
+};
 
 type AssignedWorker = {
-  workerId: string
-  startTime: string
-  endTime: string
-  role: "דייל" | "מנהל" | ""
-}
+  workerId: string;
+  startTime: string;
+  endTime: string;
+  role: "דייל" | "מנהל" | "";
+};
 
 type Props = {
-  workers: Worker[]
+  workers: Worker[];
+};
+
+function validateWorkers(list: AssignedWorker[]) {
+  const errors: Record<number, string[]> = {};
+
+  list.forEach((aw, i) => {
+    const rowErrors: string[] = [];
+
+    if (!aw.workerId) rowErrors.push("יש לבחור עובד");
+    if (!aw.startTime) rowErrors.push("יש להזין שעת התחלה");
+    if (!aw.endTime) rowErrors.push("יש להזין שעת סיום");
+    if (!aw.role) rowErrors.push("יש לבחור תפקיד");
+
+    if (rowErrors.length > 0) {
+      errors[i] = rowErrors;
+    }
+  });
+
+  return errors;
 }
 
 export default function ManagerAddShiftsClient({ workers }: Props) {
-  const [eventDate, setEventDate] = useState("")
-  const [eventLocation, setEventLocation] = useState("")
-  const [eventName, setEventName] = useState("")
-  const [teamManager, setTeamManager] = useState("")
+  const [eventDate, setEventDate] = useState("");
+  const [eventLocation, setEventLocation] = useState("");
+  const [eventName, setEventName] = useState("");
+  const [teamManager, setTeamManager] = useState("");
   const [assignedWorkers, setAssignedWorkers] = useState<AssignedWorker[]>([
     { workerId: "", startTime: "", endTime: "", role: "" },
-  ])
+  ]);
+  const [workerErrors, setWorkerErrors] = useState<Record<number, string[]>>(
+    {}
+  );
 
   const addWorker = () => {
-    setAssignedWorkers([...assignedWorkers, { workerId: "", startTime: "", endTime: "", role: "" }])
-  }
+    setAssignedWorkers([
+      ...assignedWorkers,
+      { workerId: "", startTime: "", endTime: "", role: "" },
+    ]);
+  };
 
   const removeWorker = (index: number) => {
     if (assignedWorkers.length > 1) {
-      setAssignedWorkers(assignedWorkers.filter((_, i) => i !== index))
+      setAssignedWorkers(assignedWorkers.filter((_, i) => i !== index));
     }
-  }
+  };
 
-  const updateWorker = (index: number, field: keyof AssignedWorker, value: string) => {
-    const updated = [...assignedWorkers]
-    updated[index] = { ...updated[index], [field]: value }
-    setAssignedWorkers(updated)
-  }
+  const updateWorker = (
+    index: number,
+    field: keyof AssignedWorker,
+    value: string
+  ) => {
+    const updated = [...assignedWorkers];
+    updated[index] = { ...updated[index], [field]: value };
+    setAssignedWorkers(updated);
+  };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    const formData = {
-      eventDate,
-      eventLocation,
-      eventName,
-      teamManager,
-      assignedWorkers: assignedWorkers.map((aw) => ({
-        ...aw,
-        worker: workers.find((w) => w.id === aw.workerId),
-      })),
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const errors = validateWorkers(assignedWorkers);
+    setWorkerErrors(errors);
+
+    if (Object.keys(errors).length > 0) {
+      return; // ❌ עוצר שליחה — כמו required
     }
-    console.log("טופס נשלח:", formData)
-    // Handle submission logic here
-  }
 
-  const getWorkerDisplay = (worker: Worker) => {
-    return `${worker.full_name} (${worker.email})`
-  }
+    try {
+      const res = await createShiftsAction({
+        eventDate,
+        eventLocation,
+        eventName,
+        teamManager,
+        assignedWorkers, // רק זה
+      });
+
+      console.log("נשמר בהצלחה:", res);
+    } catch (err: any) {
+      console.error("שגיאה בשמירה:", err?.message ?? err);
+    }
+  };
 
   return (
     <div
@@ -80,7 +121,10 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
     >
       <div className="mx-auto max-w-4xl">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50 mb-2"> הוספת משמרת </h1>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50 mb-2">
+            {" "}
+            הוספת משמרת{" "}
+          </h1>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -90,12 +134,17 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
               <div className="rounded-lg bg-indigo-100 dark:bg-indigo-900/30 p-2">
                 <Calendar className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
               </div>
-              <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-50">פרטי אירוע</h2>
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-50">
+                פרטי אירוע
+              </h2>
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="eventName" className="text-slate-700 dark:text-slate-300">
+                <Label
+                  htmlFor="eventName"
+                  className="text-slate-700 dark:text-slate-300"
+                >
                   שם האירוע
                 </Label>
                 <Input
@@ -109,7 +158,10 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="eventDate" className="text-slate-700 dark:text-slate-300">
+                <Label
+                  htmlFor="eventDate"
+                  className="text-slate-700 dark:text-slate-300"
+                >
                   תאריך האירוע
                 </Label>
                 <Input
@@ -123,7 +175,10 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="eventLocation" className="text-slate-700 dark:text-slate-300">
+                <Label
+                  htmlFor="eventLocation"
+                  className="text-slate-700 dark:text-slate-300"
+                >
                   <div className="flex items-center gap-2">
                     <MapPin className="h-4 w-4" />
                     מיקום האירוע
@@ -140,7 +195,10 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="teamManager" className="text-slate-700 dark:text-slate-300">
+                <Label
+                  htmlFor="teamManager"
+                  className="text-slate-700 dark:text-slate-300"
+                >
                   שם מנהל הצוות
                 </Label>
                 <Input
@@ -162,7 +220,9 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
                 <div className="rounded-lg bg-emerald-100 dark:bg-emerald-900/30 p-2">
                   <Users className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                 </div>
-                <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-50">עובדים משובצים</h2>
+                <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-50">
+                  עובדים משובצים
+                </h2>
               </div>
               <Button
                 type="button"
@@ -184,7 +244,7 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
                     "relative rounded-lg border-2 p-4 transition-all",
                     "border-slate-200 dark:border-slate-700",
                     "hover:border-emerald-200 dark:hover:border-emerald-800",
-                    "bg-slate-50 dark:bg-slate-800/50",
+                    "bg-slate-50 dark:bg-slate-800/50"
                   )}
                 >
                   {assignedWorkers.length > 1 && (
@@ -201,21 +261,35 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
 
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                     <div className="space-y-2 lg:col-span-2">
-                      <Label className="text-slate-700 dark:text-slate-300">עובד</Label>
+                      <Label className="text-slate-700 dark:text-slate-300">
+                        עובד
+                      </Label>
                       <Select
                         value={assignedWorker.workerId}
-                        onValueChange={(value) => updateWorker(index, "workerId", value)}
+                        onValueChange={(value) =>
+                          updateWorker(index, "workerId", value)
+                        }
                         required
                       >
-                        <SelectTrigger className="border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900">
+                        <SelectTrigger
+                          className={cn(
+                            "border-slate-200",
+                            workerErrors[index]?.includes("יש לבחור עובד") &&
+                              "border-red-500 focus:ring-red-500"
+                          )}
+                        >
                           <SelectValue placeholder="בחר עובד" />
                         </SelectTrigger>
                         <SelectContent>
                           {workers.map((worker) => (
                             <SelectItem key={worker.id} value={worker.id}>
                               <div className="flex flex-col">
-                                <span className="font-medium">{worker.full_name}</span>
-                                <span className="text-xs text-slate-500">{worker.email}</span>
+                                <span className="font-medium">
+                                  {worker.full_name}
+                                </span>
+                                <span className="text-xs text-slate-500">
+                                  {worker.email}
+                                </span>
                               </div>
                             </SelectItem>
                           ))}
@@ -233,7 +307,9 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
                       <Input
                         type="time"
                         value={assignedWorker.startTime}
-                        onChange={(e) => updateWorker(index, "startTime", e.target.value)}
+                        onChange={(e) =>
+                          updateWorker(index, "startTime", e.target.value)
+                        }
                         required
                         className="border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900"
                       />
@@ -249,17 +325,29 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
                       <Input
                         type="time"
                         value={assignedWorker.endTime}
-                        onChange={(e) => updateWorker(index, "endTime", e.target.value)}
+                        onChange={(e) =>
+                          updateWorker(index, "endTime", e.target.value)
+                        }
                         required
                         className="border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900"
                       />
                     </div>
-
+                    {workerErrors[index] && (
+                      <div className="mt-3 rounded-md bg-red-50 border border-red-200 p-2 text-sm text-red-700">
+                        {workerErrors[index].map((err, i) => (
+                          <div key={i}>• {err}</div>
+                        ))}
+                      </div>
+                    )}
                     <div className="space-y-2 md:col-span-2 lg:col-span-4">
-                      <Label className="text-slate-700 dark:text-slate-300">תפקיד</Label>
+                      <Label className="text-slate-700 dark:text-slate-300">
+                        תפקיד
+                      </Label>
                       <Select
                         value={assignedWorker.role}
-                        onValueChange={(value) => updateWorker(index, "role", value)}
+                        onValueChange={(value) =>
+                          updateWorker(index, "role", value)
+                        }
                         required
                       >
                         <SelectTrigger className="border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900">
@@ -290,5 +378,5 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
         </form>
       </div>
     </div>
-  )
+  );
 }
