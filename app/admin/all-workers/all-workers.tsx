@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Search } from "lucide-react"
@@ -21,14 +21,29 @@ export function AllWorkers({ users }: AllWorkersProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
 
-  const filteredUsers = users.filter((user) => user.full_name.toLowerCase().includes(searchQuery.toLowerCase()))
+  // ✅ local state that can be updated after edits
+  const [usersState, setUsersState] = useState<User[]>(users)
 
-  const handleRowClick = (user: User) => {
-    setSelectedUser(user)
+  const filteredUsers = useMemo(() => {
+    return usersState.filter((u) => u.full_name.toLowerCase().includes(searchQuery.toLowerCase()))
+  }, [usersState, searchQuery])
+
+  const handleRowClick = (user: User) => setSelectedUser(user)
+
+  // ✅ called after saving in details
+  const handleUserUpdated = (updated: User) => {
+    setUsersState((prev) => prev.map((u) => (u.id === updated.id ? updated : u)))
+    setSelectedUser(updated) // optional: keep the details showing updated values
   }
 
   if (selectedUser) {
-    return <WorkerDetails user={selectedUser} onBack={() => setSelectedUser(null)} />
+    return (
+      <WorkerDetails
+        user={selectedUser}
+        onBack={() => setSelectedUser(null)}
+        onSaved={handleUserUpdated}
+      />
+    )
   }
 
   return (
@@ -36,7 +51,6 @@ export function AllWorkers({ users }: AllWorkersProps) {
       <div className="mx-auto max-w-7xl">
         <h1 className="mb-8 text-3xl font-bold text-black">כל העובדים</h1>
 
-        {/* Search Input */}
         <div className="mb-6 relative">
           <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <Input
@@ -48,7 +62,6 @@ export function AllWorkers({ users }: AllWorkersProps) {
           />
         </div>
 
-        {/* Users Table */}
         <div className="rounded-lg border border-gray-200 overflow-hidden">
           <Table>
             <TableHeader>
@@ -60,6 +73,7 @@ export function AllWorkers({ users }: AllWorkersProps) {
                 <TableHead className="text-right text-black font-semibold">שכר (מנהל)</TableHead>
               </TableRow>
             </TableHeader>
+
             <TableBody>
               {filteredUsers.length === 0 ? (
                 <TableRow>
@@ -82,7 +96,9 @@ export function AllWorkers({ users }: AllWorkersProps) {
                       </span>
                     </TableCell>
                     <TableCell className="text-right text-black">₪{user.salary_regular.toLocaleString()}</TableCell>
-                    <TableCell className="text-right text-black">₪{user.salary_manager?.toLocaleString()?? "-"}</TableCell>
+                    <TableCell className="text-right text-black">
+                      {user.salary_manager !== null ? `₪${user.salary_manager.toLocaleString()}` : "0"}
+                    </TableCell>
                   </TableRow>
                 ))
               )}
