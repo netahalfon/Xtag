@@ -256,7 +256,7 @@ export function WorkerDetails({ user, onBack, onSaved }: WorkerDetailsProps) {
                 </Label>
                 <Input
                   id="salary_regular"
-                  type="number"
+                  type="text"
                   value={formData.salary_regular}
                   onChange={(e) =>
                     handleInputChange("salary_regular", Number(e.target.value))
@@ -274,7 +274,7 @@ export function WorkerDetails({ user, onBack, onSaved }: WorkerDetailsProps) {
                 </Label>
                 <Input
                   id="salary_manager"
-                  type="number"
+                  type="text"
                   value={formData.salary_manager ?? ""}
                   onChange={(e) =>
                     handleInputChange(
