@@ -20,8 +20,6 @@ interface AllWorkersProps {
 export function AllWorkers({ users }: AllWorkersProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
-
-  // ✅ local state that can be updated after edits
   const [usersState, setUsersState] = useState<User[]>(users)
 
   const filteredUsers = useMemo(() => {
@@ -30,10 +28,14 @@ export function AllWorkers({ users }: AllWorkersProps) {
 
   const handleRowClick = (user: User) => setSelectedUser(user)
 
-  // ✅ called after saving in details
   const handleUserUpdated = (updated: User) => {
     setUsersState((prev) => prev.map((u) => (u.id === updated.id ? updated : u)))
-    setSelectedUser(updated) // optional: keep the details showing updated values
+    setSelectedUser(updated)
+  }
+
+    const handleUserDeleted = (userId: string) => {
+    setUsersState((prev) => prev.filter((u) => u.id !== userId))
+    setSelectedUser(null)
   }
 
   if (selectedUser) {
@@ -42,6 +44,7 @@ export function AllWorkers({ users }: AllWorkersProps) {
         user={selectedUser}
         onBack={() => setSelectedUser(null)}
         onSaved={handleUserUpdated}
+        onDeleted={handleUserDeleted}
       />
     )
   }

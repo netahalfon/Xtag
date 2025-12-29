@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+
 import {
   Select,
   SelectContent,
@@ -36,9 +37,15 @@ interface WorkerDetailsProps {
   user: User;
   onBack: () => void;
   onSaved: (updatedUser: User) => void;
+  onDeleted: (userId: string) => void;
 }
 
-export function WorkerDetails({ user, onBack, onSaved }: WorkerDetailsProps) {
+export function WorkerDetails({
+  user,
+  onBack,
+  onSaved,
+  onDeleted,
+}: WorkerDetailsProps) {
   const { toast } = useToast();
   const [formData, setFormData] = useState<User>(user);
 
@@ -47,6 +54,21 @@ export function WorkerDetails({ user, onBack, onSaved }: WorkerDetailsProps) {
     value: string | number | null
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleDelete = async () => {
+    // TODO: Replace with actual API call to delete user
+    console.log("Deleting user:", user.id);
+
+    onDeleted(user.id); // ✅ מוחק מהמערך באב
+
+    toast({
+      title: "העובד נמחק בהצלחה",
+      description: "העובד הוסר מהמערכת",
+      variant: "destructive",
+    });
+
+    onBack(); // ✅ חוזר לטבלה
   };
 
   const handleSave = async () => {
@@ -59,17 +81,6 @@ export function WorkerDetails({ user, onBack, onSaved }: WorkerDetailsProps) {
       title: "העובד נשמר בהצלחה",
       description: "השינויים נשמרו במערכת",
     });
-  };
-
-  const handleDelete = async () => {
-    // TODO: Replace with actual API call to delete user
-    console.log("Deleting user:", user.id);
-    toast({
-      title: "העובד נמחק בהצלחה",
-      description: "העובד הוסר מהמערכת",
-      variant: "destructive",
-    });
-    onBack();
   };
 
   return (
