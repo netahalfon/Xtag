@@ -127,6 +127,8 @@ const handleDelete = async () => {
                 </AlertDialogTitle>
                 <AlertDialogDescription className="text-right">
                   פעולה זו תמחק את העובד לצמיתות. לא ניתן לשחזר את הפעולה.
+                    <br />
+                  כל הנתונים הקשורים לעובד זה יוסרו מהמערכת.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter className="flex-row-reverse gap-2">
