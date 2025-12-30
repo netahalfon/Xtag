@@ -27,9 +27,10 @@ interface Shift {
 
 interface ShiftsListProps {
   shifts: Shift[];
+    title?: string
 }
 
-export function ShiftsList({ shifts }: ShiftsListProps) {
+export function ShiftsList({ shifts, title = "המשמרות שלי" }: ShiftsListProps) {
   const currentDate = new Date();
   const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth());
   const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
@@ -92,10 +93,6 @@ export function ShiftsList({ shifts }: ShiftsListProps) {
         {/* Header with filters */}
         <div className="mb-8">
           <h1 className="mb-6 text-3xl font-bold text-black">המשמרות שלי</h1>
-
-          <div className="mb-8">
-            <h1 className="mb-6 text-3xl font-bold text-black">המשמרות שלי</h1>
-
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-md">
               {/* Month selector */}
               <div>
@@ -257,6 +254,5 @@ export function ShiftsList({ shifts }: ShiftsListProps) {
           </p>
         </Card>
       </div>
-    </div>
   );
 }
