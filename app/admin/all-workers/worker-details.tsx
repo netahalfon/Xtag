@@ -27,7 +27,7 @@ import {
 import { ArrowRight, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { User } from "@/types/user";
-import { updateUser } from "./actions";
+import { updateUser, deleteUser } from "./actions";
 
 const roleLabels: Record<User["role"], string> = {
   worker: "עובד",
@@ -57,11 +57,12 @@ export function WorkerDetails({
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleDelete = async () => {
-    // TODO: Replace with actual API call to delete user
-    console.log("Deleting user:", user.id);
+const handleDelete = async () => {
+  try {
+    await deleteUser(user.id); // ✅ מוחק מה-DB
 
-    onDeleted(user.id); // ✅ מוחק מהמערך באב
+    onDeleted(user.id); // ✅ מוחק מהמערך 
+    console.log("Deleted user:", user.full_name);
 
     toast({
       title: "העובד נמחק בהצלחה",
@@ -70,7 +71,16 @@ export function WorkerDetails({
     });
 
     onBack(); // ✅ חוזר לטבלה
-  };
+  } catch (err: any) {
+    console.error("Error deleting user:", err);
+    toast({
+      title: "מחיקה נכשלה",
+      description: err?.message ?? "נסה שוב",
+      variant: "destructive",
+    });
+  }
+};
+
 
   const handleSave = async () => {
     await updateUser(formData);
@@ -150,7 +160,7 @@ export function WorkerDetails({
                 </Label>
                 <Input
                   id="full_name"
-                  value={formData.full_name}
+                  value={formData.full_name ?? ""}
                   onChange={(e) =>
                     handleInputChange("full_name", e.target.value)
                   }
@@ -165,7 +175,7 @@ export function WorkerDetails({
                 <Input
                   id="email"
                   type="email"
-                  value={formData.email}
+                  value={formData.email ?? ""}
                   onChange={(e) => handleInputChange("email", e.target.value)}
                   className="text-right border-gray-200 focus:border-orange-500 focus:ring-orange-500"
                 />
@@ -221,7 +231,7 @@ export function WorkerDetails({
                   תפקיד
                 </Label>
                 <Select
-                  value={formData.role}
+                  value={formData.role ?? "?"}
                   onValueChange={(value) => handleInputChange("role", value)}
                 >
                   <SelectTrigger className="text-right border-gray-200 focus:border-orange-500 focus:ring-orange-500">
@@ -269,7 +279,7 @@ export function WorkerDetails({
                 <Input
                   id="salary_regular"
                   type="text"
-                  value={formData.salary_regular}
+                  value={formData.salary_regular  ?? "0"}
                   onChange={(e) =>
                     handleInputChange("salary_regular", Number(e.target.value))
                   }
@@ -287,7 +297,7 @@ export function WorkerDetails({
                 <Input
                   id="salary_manager"
                   type="text"
-                  value={formData.salary_manager ?? ""}
+                  value={formData.salary_manager ?? "0"}
                   onChange={(e) =>
                     handleInputChange(
                       "salary_manager",
@@ -316,7 +326,7 @@ export function WorkerDetails({
                 </Label>
                 <Input
                   id="bank_name"
-                  value={formData.bank_name}
+                  value={formData.bank_name ?? ""}
                   onChange={(e) =>
                     handleInputChange("bank_name", e.target.value)
                   }
@@ -333,7 +343,7 @@ export function WorkerDetails({
                 </Label>
                 <Input
                   id="bank_branch_number"
-                  value={formData.bank_branch_number}
+                  value={formData.bank_branch_number  ?? ""}
                   onChange={(e) =>
                     handleInputChange("bank_branch_number", e.target.value)
                   }
@@ -350,7 +360,7 @@ export function WorkerDetails({
                 </Label>
                 <Input
                   id="bank_account_number"
-                  value={formData.bank_account_number}
+                  value={formData.bank_account_number ?? ""}
                   onChange={(e) =>
                     handleInputChange("bank_account_number", e.target.value)
                   }
@@ -367,7 +377,7 @@ export function WorkerDetails({
                 </Label>
                 <Input
                   id="form101_pdf_path"
-                  value={formData.form101_pdf_path}
+                  value={formData.form101_pdf_path ?? ""}
                   onChange={(e) =>
                     handleInputChange("form101_pdf_path", e.target.value)
                   }
