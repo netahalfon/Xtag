@@ -27,6 +27,7 @@ import {
 import { ArrowRight, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { User } from "@/types/user";
+import { updateUser } from "./actions";
 
 const roleLabels: Record<User["role"], string> = {
   worker: "עובד",
@@ -72,7 +73,7 @@ export function WorkerDetails({
   };
 
   const handleSave = async () => {
-    // TODO: Replace with actual API call to update user
+    await updateUser(formData);
     console.log("Saving user:", formData);
 
     onSaved(formData); // ✅ updates table data
@@ -176,7 +177,7 @@ export function WorkerDetails({
                 </Label>
                 <Input
                   id="phone"
-                  value={formData.phone}
+                  value={formData.phone ?? ""}
                   onChange={(e) => handleInputChange("phone", e.target.value)}
                   className="text-right border-gray-200 focus:border-orange-500 focus:ring-orange-500"
                 />
@@ -209,7 +210,7 @@ export function WorkerDetails({
                 </Label>
                 <Input
                   id="city"
-                  value={formData.city}
+                  value={formData.city ?? ""}
                   onChange={(e) => handleInputChange("city", e.target.value)}
                   className="text-right border-gray-200 focus:border-orange-500 focus:ring-orange-500"
                 />
@@ -243,7 +244,7 @@ export function WorkerDetails({
               </Label>
               <Textarea
                 id="notes"
-                value={formData.notes}
+                value={formData.notes ?? ""}
                 onChange={(e) => handleInputChange("notes", e.target.value)}
                 rows={3}
                 className="text-right border-gray-200 focus:border-orange-500 focus:ring-orange-500 resize-none"
