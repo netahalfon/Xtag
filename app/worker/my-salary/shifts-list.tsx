@@ -87,59 +87,59 @@ export function ShiftsList({ shifts }: ShiftsListProps) {
   };
 
   return (
-    <div className="min-h-screen bg-white p-4 md:p-8">
+    <div dir="rtl" className="min-h-screen bg-white p-4 md:p-8">
       <div className="mx-auto max-w-7xl">
         {/* Header with filters */}
         <div className="mb-8">
           <h1 className="mb-6 text-3xl font-bold text-black">המשמרות שלי</h1>
 
-          <div className="flex flex-wrap gap-4">
-            {/* Month selector */}
-            <div className="flex-1 min-w-[200px]">
-              <label className="mb-2 block text-sm font-medium text-black">
-                חודש
-              </label>
-              <Select
-                value={selectedMonth.toString()}
-                onValueChange={(value) =>
-                  setSelectedMonth(Number.parseInt(value))
-                }
-              >
-                <SelectTrigger className="border-orange-500 bg-white text-black focus:ring-orange-500">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {monthNames.map((month, index) => (
-                    <SelectItem key={index} value={index.toString()}>
-                      {month}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="mb-8">
+            <h1 className="mb-6 text-3xl font-bold text-black">המשמרות שלי</h1>
 
-            {/* Year selector */}
-            <div className="flex-1 min-w-[200px]">
-              <label className="mb-2 block text-sm font-medium text-black">
-                שנה
-              </label>
-              <Select
-                value={selectedYear.toString()}
-                onValueChange={(value) =>
-                  setSelectedYear(Number.parseInt(value))
-                }
-              >
-                <SelectTrigger className="border-orange-500 bg-white text-black focus:ring-orange-500">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {yearOptions.map((year) => (
-                    <SelectItem key={year} value={year.toString()}>
-                      {year}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-md">
+              {/* Month selector */}
+              <div>
+                <label className="mb-1 block text-sm font-medium text-black">
+                  חודש
+                </label>
+                <Select
+                  value={selectedMonth.toString()}
+                  onValueChange={(value) => setSelectedMonth(Number(value))}
+                >
+                  <SelectTrigger className="border-orange-500 bg-white text-black focus:ring-orange-500">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {monthNames.map((month, index) => (
+                      <SelectItem key={index} value={index.toString()}>
+                        {month}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Year selector */}
+              <div>
+                <label className="mb-1 block text-sm font-medium text-black">
+                  שנה
+                </label>
+                <Select
+                  value={selectedYear.toString()}
+                  onValueChange={(value) => setSelectedYear(Number(value))}
+                >
+                  <SelectTrigger className="border-orange-500 bg-white text-black focus:ring-orange-500">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {yearOptions.map((year) => (
+                      <SelectItem key={year} value={year.toString()}>
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
         </div>
