@@ -58,7 +58,7 @@ export function AllWorkers({ users }: AllWorkersProps) {
           <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <Input
             type="text"
-            placeholder="חיפוש לפי שם..."
+            placeholder="    חיפוש לפי שם..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pr-10 border-gray-200 focus:border-orange-500 focus:ring-orange-500"
