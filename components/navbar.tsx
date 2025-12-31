@@ -123,13 +123,13 @@ export function Navbar() {
 
           {/* Desktop Navigation (single render) */}
           {user && (
-            <nav className="hidden md:flex items-center gap-8">
+            <nav className="hidden md:flex flex-1 items-center justify-end gap-2">
               {navItems.map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
                   className={cn(
-                    "inline-flex items-center justify-center rounded-full px-5 py-2 text-sm font-medium no-underline transition-colors",
+                    "inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-medium no-underline transition-colors whitespace-nowrap",
                     pathname === item.href
                       ? "bg-orange-50 text-slate-900"
                       : "text-slate-900 hover:bg-orange-50"
@@ -141,8 +141,7 @@ export function Navbar() {
 
               <button
                 onClick={handleLogoutButton}
-                className="ml-4 rounded-full px-6 py-2 text-base font-medium text-orange-600 border-2 border-orange-600 hover:bg-orange-600
-    hover:text-white transition-colors"
+                className="rounded-full px-4 py-2 text-sm font-medium text-orange-600 border-2 border-orange-600 hover:bg-orange-600 hover:text-white transition-colors whitespace-nowrap"
               >
                 התנתקות
               </button>
