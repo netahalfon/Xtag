@@ -14,7 +14,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
-import { Plus, X, Calendar, MapPin, Users, Clock } from "lucide-react";
+import {
+  Plus,
+  X,
+  Calendar,
+  MapPin,
+  Users,
+  Clock,
+  CheckCircle2,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createShiftsAction } from "./actions";
 
@@ -55,6 +63,10 @@ function validateWorkers(list: AssignedWorker[]) {
 }
 
 export default function ManagerAddShiftsClient({ workers }: Props) {
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
   const [eventDate, setEventDate] = useState("");
   const [eventLocation, setEventLocation] = useState("");
   const [eventName, setEventName] = useState("");
@@ -76,6 +88,11 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
   const removeWorker = (index: number) => {
     if (assignedWorkers.length > 1) {
       setAssignedWorkers(assignedWorkers.filter((_, i) => i !== index));
+      setWorkerErrors((prev) => {
+        const copy = { ...prev };
+        delete copy[index];
+        return copy;
+      });
     }
   };
 
@@ -87,6 +104,28 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
     const updated = [...assignedWorkers];
     updated[index] = { ...updated[index], [field]: value };
     setAssignedWorkers(updated);
+
+    // אופציונלי: מנקה שגיאות של אותה שורה בזמן עריכה
+    setWorkerErrors((prev) => {
+      if (!prev[index]) return prev;
+      const next = { ...prev };
+      delete next[index];
+      return next;
+    });
+  };
+
+  const handleReset = () => {
+    setIsSubmitted(false);
+    setIsSubmitting(false);
+    setSubmitError(null);
+    setEventDate("");
+    setEventLocation("");
+    setEventName("");
+    setTeamManager("");
+    setAssignedWorkers([
+      { workerId: "", startTime: "", endTime: "", role: "" },
+    ]);
+    setWorkerErrors({});
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -94,26 +133,72 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
 
     const errors = validateWorkers(assignedWorkers);
     setWorkerErrors(errors);
+    if (Object.keys(errors).length > 0) return;
 
-    if (Object.keys(errors).length > 0) {
-      return; // ❌ עוצר שליחה — כמו required
-    }
+    // ✅ רק אם באמת הצליח: נציג success screen
+    setSubmitError(null);
+    setIsSubmitting(true);
 
     try {
-      const res = await createShiftsAction({
+      await createShiftsAction({
         eventDate,
         eventLocation,
         eventName,
         teamManager,
-        assignedWorkers, // רק זה
+        assignedWorkers,
       });
 
-      console.log("נשמר בהצלחה:", res);
+      setIsSubmitted(true);
     } catch (err: any) {
-      console.error("שגיאה בשמירה:", err?.message ?? err);
+      const msg =
+        err?.message ||
+        "שמירת המשמרת נכשלה. בדקי הרשאות / שדות חובה / נסי שוב.";
+      setSubmitError(msg);
+      setIsSubmitted(false);
+      console.error("שגיאה בשמירה:", err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
+  // ✅ מסך הצלחה (כמו V0) — מופיע רק אחרי הצלחה אמיתית
+  if (isSubmitted) {
+    return (
+      <div
+        dir="rtl"
+        className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950 dark:to-amber-950 p-4 md:p-8 flex items-center justify-center"
+      >
+        <Card className="max-w-md w-full p-8 border-2 border-orange-200 dark:border-orange-800 bg-white dark:bg-slate-900 shadow-xl">
+          <div className="text-center space-y-6">
+            <div className="flex justify-center">
+              <div className="rounded-full bg-orange-100 dark:bg-orange-900/30 p-4">
+                <CheckCircle2 className="h-16 w-16 text-orange-600 dark:text-orange-400 animate-in zoom-in duration-500" />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-50">
+                הטופס נשלח בהצלחה!
+              </h2>
+              <p className="text-slate-600 dark:text-slate-400">
+                המשמרת נוספה בהצלחה למערכת
+              </p>
+            </div>
+
+            <Button
+              onClick={handleReset}
+              size="lg"
+              className="w-full bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 text-white"
+            >
+              לשליחת טופס חדש לחץ כאן
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  // ✅ הטופס (עם חיווי כשלון)
   return (
     <div
       dir="rtl"
@@ -127,12 +212,21 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
           </h1>
         </div>
 
+        {/* ✅ חיווי שגיאה רק אם נכשל */}
+        {submitError && (
+          <Card className="mb-6 border-2 border-red-200 bg-red-50 p-4">
+            <div className="text-sm text-red-700 font-medium">
+              ❌ {submitError}
+            </div>
+          </Card>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Event Details Section */}
-          <Card className="p-6 border-2 border-indigo-100 dark:border-indigo-900/30 bg-white dark:bg-slate-900">
+          {/* Event Details Section (לוק V0) */}
+          <Card className="p-6 border-2 border-orange-100 dark:border-orange-900/30 bg-white dark:bg-slate-900">
             <div className="flex items-center gap-2 mb-6">
-              <div className="rounded-lg bg-indigo-100 dark:bg-indigo-900/30 p-2">
-                <Calendar className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+              <div className="rounded-lg bg-orange-100 dark:bg-orange-900/30 p-2">
+                <Calendar className="h-5 w-5 text-orange-600 dark:text-orange-400" />
               </div>
               <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-50">
                 פרטי אירוע
@@ -153,7 +247,7 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
                   onChange={(e) => setEventName(e.target.value)}
                   placeholder="קונצרט קיץ 2024"
                   required
-                  className="border-slate-200 dark:border-slate-700 focus-visible:ring-indigo-500"
+                  className="border-slate-200 dark:border-slate-700 focus-visible:ring-orange-500"
                 />
               </div>
 
@@ -170,7 +264,7 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
                   value={eventDate}
                   onChange={(e) => setEventDate(e.target.value)}
                   required
-                  className="border-slate-200 dark:border-slate-700 focus-visible:ring-indigo-500"
+                  className="border-slate-200 dark:border-slate-700 focus-visible:ring-orange-500"
                 />
               </div>
 
@@ -190,7 +284,7 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
                   onChange={(e) => setEventLocation(e.target.value)}
                   placeholder="גן סקר, תל אביב"
                   required
-                  className="border-slate-200 dark:border-slate-700 focus-visible:ring-indigo-500"
+                  className="border-slate-200 dark:border-slate-700 focus-visible:ring-orange-500"
                 />
               </div>
 
@@ -207,29 +301,31 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
                   onChange={(e) => setTeamManager(e.target.value)}
                   placeholder="יוסי כהן"
                   required
-                  className="border-slate-200 dark:border-slate-700 focus-visible:ring-indigo-500"
+                  className="border-slate-200 dark:border-slate-700 focus-visible:ring-orange-500"
                 />
               </div>
             </div>
           </Card>
 
-          {/* Assigned Workers Section */}
-          <Card className="p-6 border-2 border-emerald-100 dark:border-emerald-900/30 bg-white dark:bg-slate-900">
+          {/* Assigned Workers Section (לוק V0 + השגיאות שלך) */}
+          <Card className="p-6 border-2 border-orange-100 dark:border-orange-900/30 bg-white dark:bg-slate-900">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
-                <div className="rounded-lg bg-emerald-100 dark:bg-emerald-900/30 p-2">
-                  <Users className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                <div className="rounded-lg bg-orange-100 dark:bg-orange-900/30 p-2">
+                  <Users className="h-5 w-5 text-orange-600 dark:text-orange-400" />
                 </div>
                 <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-50">
                   עובדים משובצים
                 </h2>
               </div>
+
               <Button
                 type="button"
                 onClick={addWorker}
                 variant="outline"
                 size="sm"
-                className="border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 bg-transparent"
+                className="border-orange-200 dark:border-orange-800 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 bg-transparent"
+                disabled={isSubmitting}
               >
                 <Plus className="h-4 w-4 ml-2" />
                 הוסף עובד
@@ -243,7 +339,7 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
                   className={cn(
                     "relative rounded-lg border-2 p-4 transition-all",
                     "border-slate-200 dark:border-slate-700",
-                    "hover:border-emerald-200 dark:hover:border-emerald-800",
+                    "hover:border-orange-200 dark:hover:border-orange-800",
                     "bg-slate-50 dark:bg-slate-800/50"
                   )}
                 >
@@ -254,6 +350,7 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
                       size="sm"
                       onClick={() => removeWorker(index)}
                       className="absolute left-2 top-2 h-8 w-8 p-0 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                      disabled={isSubmitting}
                     >
                       <X className="h-4 w-4" />
                     </Button>
@@ -269,11 +366,11 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
                         onValueChange={(value) =>
                           updateWorker(index, "workerId", value)
                         }
-                        required
+                        disabled={isSubmitting}
                       >
                         <SelectTrigger
                           className={cn(
-                            "border-slate-200",
+                            "border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900",
                             workerErrors[index]?.includes("יש לבחור עובד") &&
                               "border-red-500 focus:ring-red-500"
                           )}
@@ -310,8 +407,12 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
                         onChange={(e) =>
                           updateWorker(index, "startTime", e.target.value)
                         }
-                        required
-                        className="border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900"
+                        className={cn(
+                          "border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900",
+                          workerErrors[index]?.includes("יש להזין שעת התחלה") &&
+                            "border-red-500 focus-visible:ring-red-500"
+                        )}
+                        disabled={isSubmitting}
                       />
                     </div>
 
@@ -328,17 +429,15 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
                         onChange={(e) =>
                           updateWorker(index, "endTime", e.target.value)
                         }
-                        required
-                        className="border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900"
+                        className={cn(
+                          "border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900",
+                          workerErrors[index]?.includes("יש להזין שעת סיום") &&
+                            "border-red-500 focus-visible:ring-red-500"
+                        )}
+                        disabled={isSubmitting}
                       />
                     </div>
-                    {workerErrors[index] && (
-                      <div className="mt-3 rounded-md bg-red-50 border border-red-200 p-2 text-sm text-red-700">
-                        {workerErrors[index].map((err, i) => (
-                          <div key={i}>• {err}</div>
-                        ))}
-                      </div>
-                    )}
+
                     <div className="space-y-2 md:col-span-2 lg:col-span-4">
                       <Label className="text-slate-700 dark:text-slate-300">
                         תפקיד
@@ -348,9 +447,15 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
                         onValueChange={(value) =>
                           updateWorker(index, "role", value)
                         }
-                        required
+                        disabled={isSubmitting}
                       >
-                        <SelectTrigger className="border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900">
+                        <SelectTrigger
+                          className={cn(
+                            "border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900",
+                            workerErrors[index]?.includes("יש לבחור תפקיד") &&
+                              "border-red-500 focus:ring-red-500"
+                          )}
+                        >
                           <SelectValue placeholder="בחר תפקיד" />
                         </SelectTrigger>
                         <SelectContent>
@@ -360,6 +465,14 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
                       </Select>
                     </div>
                   </div>
+
+                  {workerErrors[index] && (
+                    <div className="mt-3 rounded-md bg-red-50 border border-red-200 p-2 text-sm text-red-700">
+                      {workerErrors[index].map((err, i) => (
+                        <div key={i}>• {err}</div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -370,9 +483,10 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
             <Button
               type="submit"
               size="lg"
-              className="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white px-8"
+              className="bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 text-white px-8"
+              disabled={isSubmitting}
             >
-              שלח משמרת
+              {isSubmitting ? "שולח..." : "שלח משמרת"}
             </Button>
           </div>
         </form>
