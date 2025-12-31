@@ -21,8 +21,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Search, Edit2, Save, Trash2 } from "lucide-react";
-import { Shift } from "@/types/shifts";
+import type { Shift } from "@/types/shift";
 
 const roleLabels: Record<Shift["role"], string> = {
   worker: "עובד",
@@ -271,9 +278,26 @@ export function AllShifts({ shifts: initialShifts }: AllShiftsProps) {
                         {displayShift.manager}
                       </TableCell>
                       <TableCell className="text-right">
-                        <span className="inline-flex items-center rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-orange-800">
-                          {roleLabels[displayShift.role]}
-                        </span>
+                        {isEditing ? (
+                          <Select
+                            value={displayShift.role}
+                            onValueChange={(value) =>
+                              handleFieldChange("role", value)
+                            }
+                          >
+                            <SelectTrigger className="w-28 border-orange-300 focus:border-orange-500 focus:ring-orange-500">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent dir="rtl">
+                              <SelectItem value="worker">עובד</SelectItem>
+                              <SelectItem value="manager">מנהל</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <span className="inline-flex items-center rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-orange-800">
+                            {roleLabels[displayShift.role]}
+                          </span>
+                        )}
                       </TableCell>
                       <TableCell className="text-right">
                         {isEditing ? (
