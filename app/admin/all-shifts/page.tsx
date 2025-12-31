@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import type { Shift } from "@/types/shifts";
+import type { Shift } from "@/types/shift";
 import { AllShifts } from "./all-shifts";
 
 export default async function AdminAllShiftsPage() {
