@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { WorkerCombobox } from "./worker-combobox";
 import { Card } from "@/components/ui/card";
 import {
   Plus,
@@ -357,41 +358,15 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
                   )}
 
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                    <div className="space-y-2 lg:col-span-2">
-                      <Label className="text-slate-700 dark:text-slate-300">
-                        עובד
-                      </Label>
-                      <Select
-                        value={assignedWorker.workerId}
-                        onValueChange={(value) =>
-                          updateWorker(index, "workerId", value)
-                        }
-                        disabled={isSubmitting}
-                      >
-                        <SelectTrigger
-                          className={cn(
-                            "border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900",
-                            workerErrors[index]?.includes("יש לבחור עובד") &&
-                              "border-red-500 focus:ring-red-500"
-                          )}
-                        >
-                          <SelectValue placeholder="בחר עובד" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {workers.map((worker) => (
-                            <SelectItem key={worker.id} value={worker.id}>
-                              <div className="flex flex-col">
-                                <span className="font-medium">
-                                  {worker.full_name}
-                                </span>
-                                <span className="text-xs text-slate-500">
-                                  {worker.email}
-                                </span>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                    
+                      <div className="space-y-2 lg:col-span-2">
+                        <WorkerCombobox
+                          workers={workers}
+                          value={assignedWorker.workerId}
+                          onChange={(id) => updateWorker(index, "workerId", id)}
+                          disabled={isSubmitting}
+                          error={workerErrors[index]?.includes("יש לבחור עובד")}
+                        />
                     </div>
 
                     <div className="space-y-2">
