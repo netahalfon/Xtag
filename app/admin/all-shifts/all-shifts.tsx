@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/select";
 import { Search, Edit2, Save, Trash2 } from "lucide-react";
 import type { Shift } from "@/types/shift";
+import { updateShift, deleteShift } from "./actions";
 
 const roleLabels: Record<Shift["role"], string> = {
   worker: "עובד",
@@ -77,7 +78,24 @@ export function AllShifts({ shifts: initialShifts }: AllShiftsProps) {
     wageBonus: number,
     travelAmount: number
   ): number => {
-    return totalHours * hourlyRate + wageBonus + travelAmount;
+    if (totalHours <= 8) {
+      return totalHours * hourlyRate + wageBonus + travelAmount;
+    } else if (totalHours > 8 && totalHours <= 10) {
+      return (
+        totalHours * hourlyRate +
+        (totalHours - 8) * hourlyRate * 0.25 +
+        wageBonus +
+        travelAmount
+      );
+    } else {
+      return (
+        totalHours * hourlyRate +
+        2 * hourlyRate * 0.25 +
+        (totalHours - 10) * hourlyRate * 0.5 +
+        wageBonus +
+        travelAmount
+      );
+    }
   };
 
   const handleEdit = (shift: Shift) => {
@@ -128,7 +146,7 @@ export function AllShifts({ shifts: initialShifts }: AllShiftsProps) {
     if (!editedShift) return;
 
     // TODO: Call server API to update shift
-    // await updateShift(editedShift)
+    await updateShift(editedShift);
 
     setShifts((prevShifts) =>
       prevShifts.map((shift) =>
@@ -147,8 +165,8 @@ export function AllShifts({ shifts: initialShifts }: AllShiftsProps) {
   const handleDeleteConfirm = async () => {
     if (!shiftToDelete) return;
 
-    // TODO: Call server API to delete shift
-    // await deleteShift(shiftToDelete)
+    await deleteShift(shiftToDelete);
+    
 
     setShifts((prevShifts) =>
       prevShifts.filter((shift) => shift.id !== shiftToDelete)
