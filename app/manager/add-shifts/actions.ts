@@ -5,12 +5,12 @@ import { createClient } from "@/lib/supabase/server";
 type AssignedWorker = {
   workerId: string;
   startTime: string; // "HH:MM"
-  endTime: string;   // "HH:MM"
+  endTime: string; // "HH:MM"
   role: "דייל" | "מנהל" | "";
 };
 
 type CreateShiftsInput = {
-  eventDate: string;      // "YYYY-MM-DD"
+  eventDate: string; // "YYYY-MM-DD"
   eventLocation: string;
   eventName: string;
   teamManager: string;
@@ -29,11 +29,41 @@ function calcTotalHours(start: string, end: string) {
   return Number(((endMin - startMin) / 60).toFixed(2));
 }
 
+// Calculate total pay (OT rules)
+const calculateShiftPayTotal = (
+  totalHours: number,
+  hourlyRate: number,
+  wageBonus: number,
+  travelAmount: number
+): number => {
+  if (totalHours <= 8) {
+    return totalHours * hourlyRate + wageBonus + travelAmount;
+  } else if (totalHours > 8 && totalHours <= 10) {
+    return (
+      totalHours * hourlyRate +
+      (totalHours - 8) * hourlyRate * 0.25 +
+      wageBonus +
+      travelAmount
+    );
+  } else {
+    return (
+      totalHours * hourlyRate +
+      2 * hourlyRate * 0.25 +
+      (totalHours - 10) * hourlyRate * 0.5 +
+      wageBonus +
+      travelAmount
+    );
+  }
+};
+
 export async function createShiftsAction(input: CreateShiftsInput) {
   const supabase = await createClient();
 
   // Optional auth guard (keep if you want)
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
   if (authError || !user) throw new Error("Not authenticated");
 
   if (!input.eventDate || !input.eventLocation || !input.teamManager) {
@@ -95,7 +125,12 @@ export async function createShiftsAction(input: CreateShiftsInput) {
     const travelAmount = travelAmountDefault;
 
     const shiftPayTotal = Number(
-      (totalHours * hourlyRate + wageBonus + travelAmount).toFixed(2)
+      calculateShiftPayTotal(
+        totalHours,
+        hourlyRate,
+        wageBonus,
+        travelAmount
+      ).toFixed(2)
     );
 
     return {
