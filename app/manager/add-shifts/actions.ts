@@ -113,7 +113,7 @@ export async function createShiftsAction(input: CreateShiftsInput) {
     const hourlyRate =
       aw.role === "מנהל" ? salary.salary_manager : salary.salary_regular;
 
-    if (hourlyRate <= 0) {
+    if (hourlyRate < 0) {
       throw new Error(
         `Missing/invalid hourly rate for worker ${aw.workerId} (role: ${aw.role})`
       );
