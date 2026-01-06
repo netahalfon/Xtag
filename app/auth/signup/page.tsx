@@ -87,8 +87,13 @@ export default function SignupPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!fullName.trim()) {
-      setError("יש להזין שם מלא לפני העלאת טופס 101");
+    const safeIdNumber = digitsOnly(idNumber);
+    if (
+      !safeIdNumber ||
+      safeIdNumber.length !== 9 ||
+      !isIdValid(safeIdNumber)
+    ) {
+      setError("יש להזין תעודת זהות תקינה לפני העלאת טופס 101");
       return;
     }
 
@@ -109,27 +114,20 @@ export default function SignupPage() {
 
     try {
       const supabase = createClient();
-
-      const token =
-        typeof crypto !== "undefined" && "randomUUID" in crypto
-          ? crypto.randomUUID()
-          : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      const safeIdNumber = idNumber.replace(/\D/g, "");
+      if (!safeIdNumber) {
+        throw new Error("Missing id_number for file upload");
+      }
 
       const today = new Date();
-
       const year = today.getFullYear();
-      const day = String(today.getDate()).padStart(2, "0");
       const month = String(today.getMonth() + 1).padStart(2, "0");
-
-      // ניקוי שם מלא → lowercase + underscores
-      const safeFullName = fullName
-        .trim()
-        .replace(/\s+/g, "_") // רווחים → _
-        .replace(/[^\w\u0590-\u05FF]/g, "") // השאר עברית / אנגלית / _
-        .toLowerCase();
+      const day = String(today.getDate()).padStart(2, "0");
 
       const timestamp = Date.now();
-      const filePath = `${year}/${safeFullName}_${day}_${month}_${year}_${timestamp}.pdf`;
+
+      // path תקני ל־Supabase Storage
+      const filePath = `form101/${year}/${safeIdNumber}_${day}${month}${year}_${timestamp}.pdf`;
 
       const { error: uploadError } = await supabase.storage
         .from("forms101") // bucket name

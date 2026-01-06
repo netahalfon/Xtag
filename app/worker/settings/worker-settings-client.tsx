@@ -1,8 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { updateWorkerProfile, uploadForm101 } from "./actions";
 
 import { Button } from "@/components/ui/button";
@@ -14,14 +13,24 @@ import { Badge } from "@/components/ui/badge";
 type WorkerProfile = {
   email: string;
   full_name: string;
+  role: "worker" | "manager" | "admin" | string;
+
   phone: string;
   birth_date: string;
   city: string;
-  form101_pdf_path: string | null;
+
+  id_number: string;
+
   bank_name: string;
   bank_branch_number: string;
   bank_account_number: string;
-  role?: string; // מגיע מה-select, לא חייבים להשתמש ב-UI
+
+  car_number: string | null;
+
+  emergency_contact_name: string;
+  emergency_contact_phone: string;
+
+  form101_pdf_path: string | null;
 };
 
 const bankNames = [
@@ -44,14 +53,42 @@ const bankNames = [
   "בנק ישראל (מספר בנק - 99)",
 ];
 
+// Keep UI clean, but send digits-only to the server (like your payload)
+const digitsOnly = (value: string) => value.replace(/\D/g, "");
+
 export default function WorkerSettingsClient({
   initialUserData,
 }: {
   initialUserData: WorkerProfile;
 }) {
-  const [userData, setUserData] = useState<WorkerProfile>(initialUserData);
+  // Ensure any missing fields won't crash the UI
+  const normalizedInitial: WorkerProfile = {
+    email: initialUserData.email ?? "",
+    full_name: initialUserData.full_name ?? "",
+    role: initialUserData.role ?? "worker",
+
+    phone: initialUserData.phone ?? "",
+    birth_date: initialUserData.birth_date ?? "",
+    city: initialUserData.city ?? "",
+
+    id_number: initialUserData.id_number ?? "",
+
+    bank_name: initialUserData.bank_name ?? "",
+    bank_branch_number: initialUserData.bank_branch_number ?? "",
+    bank_account_number: initialUserData.bank_account_number ?? "",
+
+    car_number: initialUserData.car_number ?? null,
+
+    emergency_contact_name: initialUserData.emergency_contact_name ?? "",
+    emergency_contact_phone: initialUserData.emergency_contact_phone ?? "",
+
+    form101_pdf_path: initialUserData.form101_pdf_path ?? null,
+  };
+
+  const [userData, setUserData] = useState<WorkerProfile>(normalizedInitial);
   const [isEditing, setIsEditing] = useState(false);
-  const [editedData, setEditedData] = useState<WorkerProfile>(initialUserData);
+  const [editedData, setEditedData] =
+    useState<WorkerProfile>(normalizedInitial);
   const [isPending, startTransition] = useTransition();
 
   const [uploadingFile, setUploadingFile] = useState(false);
@@ -88,15 +125,32 @@ export default function WorkerSettingsClient({
 
   const handleSave = () => {
     console.log("[WorkerSettings] Save clicked. payload:", editedData);
+
     startTransition(async () => {
       try {
         await updateWorkerProfile({
-          phone: editedData.phone,
+          // match your required payload fields:
+          full_name: editedData.full_name,
+          role: "worker",
+
+          phone: digitsOnly(editedData.phone),
           birth_date: editedData.birth_date,
-          city: editedData.city,
-          bank_name: editedData.bank_name,
-          bank_branch_number: editedData.bank_branch_number,
-          bank_account_number: editedData.bank_account_number,
+          city: editedData.city?.trim(),
+          id_number: digitsOnly(editedData.id_number),
+
+          bank_name: editedData.bank_name?.trim(),
+          bank_branch_number: digitsOnly(editedData.bank_branch_number),
+          bank_account_number: digitsOnly(editedData.bank_account_number),
+
+          car_number: editedData.car_number?.trim()
+            ? digitsOnly(editedData.car_number)
+            : null,
+
+          emergency_contact_name: editedData.emergency_contact_name?.trim(),
+          emergency_contact_phone: digitsOnly(
+            editedData.emergency_contact_phone
+          ),
+
           form101_pdf_path: editedData.form101_pdf_path,
         });
 
@@ -128,6 +182,7 @@ export default function WorkerSettingsClient({
           <CardHeader className="border-b border-gray-200">
             <CardTitle className="text-xl text-black">מידע אישי</CardTitle>
           </CardHeader>
+
           <CardContent className="pt-6 space-y-4">
             {/* Email - Read-only */}
             <div>
@@ -147,7 +202,7 @@ export default function WorkerSettingsClient({
               </div>
             </div>
 
-            {/* Full Name - Read-only */}
+            {/* Full Name - Read-only (kept as read-only like you had) */}
             <div>
               <Label className="text-black font-medium">שם מלא</Label>
               <div className="flex items-center gap-2 mt-1.5">
@@ -165,6 +220,22 @@ export default function WorkerSettingsClient({
               </div>
             </div>
 
+            {/* ID Number - Editable (required in DB, but UI can still allow edit if you want) */}
+            <div>
+              <Label className="text-black font-medium">תעודת זהות</Label>
+              <Input
+                value={currentData.id_number ?? ""}
+                onChange={(e) => handleInputChange("id_number", e.target.value)}
+                disabled={!isEditing}
+                inputMode="numeric"
+                className={
+                  isEditing
+                    ? "border-orange-500 focus-visible:ring-orange-500"
+                    : "border-gray-200"
+                }
+              />
+            </div>
+
             {/* Phone - Editable */}
             <div>
               <Label className="text-black font-medium">טלפון</Label>
@@ -172,6 +243,7 @@ export default function WorkerSettingsClient({
                 value={currentData.phone ?? ""}
                 onChange={(e) => handleInputChange("phone", e.target.value)}
                 disabled={!isEditing}
+                inputMode="tel"
                 className={
                   isEditing
                     ? "border-orange-500 focus-visible:ring-orange-500"
@@ -200,7 +272,7 @@ export default function WorkerSettingsClient({
 
             {/* City - Editable */}
             <div>
-              <Label className="text-black font-medium">עיר</Label>
+              <Label className="text-black font-medium">כתובת מגורים</Label>
               <Input
                 value={currentData.city ?? ""}
                 onChange={(e) => handleInputChange("city", e.target.value)}
@@ -211,6 +283,81 @@ export default function WorkerSettingsClient({
                     : "border-gray-200"
                 }
               />
+              <p className="text-xs text-gray-500 mt-1">
+                אפשר להזין כתובת מלאה (רחוב/מספר/עיר).
+              </p>
+            </div>
+
+            {/* Car Number - Editable (optional) */}
+            <div>
+              <Label className="text-black font-medium">
+                מספר רכב (לא חובה)
+              </Label>
+              <Input
+                value={currentData.car_number ?? ""}
+                onChange={(e) =>
+                  handleInputChange("car_number", e.target.value)
+                }
+                disabled={!isEditing}
+                inputMode="numeric"
+                placeholder="לדוגמה: 1234567"
+                className={
+                  isEditing
+                    ? "border-orange-500 focus-visible:ring-orange-500"
+                    : "border-gray-200"
+                }
+              />
+            </div>
+
+            {/* Emergency Contact */}
+            <div className="pt-2">
+              <h3 className="text-base font-semibold text-black mb-3">
+                איש קשר לחירום
+              </h3>
+
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-black font-medium">שם איש קשר</Label>
+                  <Input
+                  
+                    value={currentData.emergency_contact_name ?? ""}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "emergency_contact_name",
+                        e.target.value
+                      )
+                    }
+                    disabled={!isEditing}
+                    className={
+                      isEditing
+                        ? "border-orange-500 focus-visible:ring-orange-500"
+                        : "border-gray-200"
+                    }
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-black font-medium">
+                    טלפון איש קשר
+                  </Label>
+                  <Input
+                    value={currentData.emergency_contact_phone ?? ""}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "emergency_contact_phone",
+                        e.target.value
+                      )
+                    }
+                    disabled={!isEditing}
+                    inputMode="tel"
+                    className={
+                      isEditing
+                        ? "border-orange-500 focus-visible:ring-orange-500"
+                        : "border-gray-200"
+                    }
+                  />
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -220,6 +367,7 @@ export default function WorkerSettingsClient({
           <CardHeader className="border-b border-gray-200">
             <CardTitle className="text-xl text-black">מידע בנקאי</CardTitle>
           </CardHeader>
+
           <CardContent className="pt-6 space-y-4">
             {/* Bank Name - Editable */}
             <div>
@@ -230,11 +378,11 @@ export default function WorkerSettingsClient({
                 onChange={(e) => handleInputChange("bank_name", e.target.value)}
                 disabled={!isEditing}
                 className={`w-full h-10 px-3 rounded-md border text-sm
-      ${
-        isEditing
-          ? "border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
-          : "border-gray-200 bg-gray-100"
-      }`}
+                  ${
+                    isEditing
+                      ? "border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      : "border-gray-200 bg-gray-100"
+                  }`}
               >
                 <option value="" disabled>
                   בחר בנק
@@ -257,6 +405,7 @@ export default function WorkerSettingsClient({
                   handleInputChange("bank_branch_number", e.target.value)
                 }
                 disabled={!isEditing}
+                inputMode="numeric"
                 className={
                   isEditing
                     ? "border-orange-500 focus-visible:ring-orange-500"
@@ -274,6 +423,7 @@ export default function WorkerSettingsClient({
                   handleInputChange("bank_account_number", e.target.value)
                 }
                 disabled={!isEditing}
+                inputMode="numeric"
                 className={
                   isEditing
                     ? "border-orange-500 focus-visible:ring-orange-500"
@@ -289,8 +439,9 @@ export default function WorkerSettingsClient({
           <CardHeader className="border-b border-gray-200">
             <CardTitle className="text-xl text-black">טופס 101</CardTitle>
           </CardHeader>
+
           <CardContent className="pt-2 space-y-8">
-            <div className="">
+            <div>
               <a
                 href="https://tofes101.co.il/fill-form-101/"
                 target="_blank"
@@ -300,7 +451,7 @@ export default function WorkerSettingsClient({
                 מילוי טופס 101
               </a>
             </div>
-            {/* Form 101 Upload Status - Read-only */}
+
             <div>
               <div className="mt-1.5 space-y-2">
                 <div className="flex items-center gap-2">
@@ -313,12 +464,14 @@ export default function WorkerSettingsClient({
                   >
                     {currentData.form101_pdf_path ? "הועלה" : "לא הועלה"}
                   </Badge>
+
                   {currentData.form101_pdf_path && (
                     <span className="text-sm text-gray-600">
                       {currentData.form101_pdf_path}
                     </span>
                   )}
                 </div>
+
                 {!currentData.form101_pdf_path && (
                   <div>
                     <Input
@@ -354,8 +507,9 @@ export default function WorkerSettingsClient({
                 variant="outline"
                 className="bg-orange-500 hover:bg-orange-600 text-white"
               >
-                {isPending ? "שומר..." : "שמור שינויים"}{" "}
+                {isPending ? "שומר..." : "שמור שינויים"}
               </Button>
+
               <Button
                 onClick={handleCancel}
                 variant="outline"

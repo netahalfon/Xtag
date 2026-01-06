@@ -8,19 +8,32 @@ export default async function WorkerSettingsPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect("/auth/login");
-  }
+  if (!user) redirect("/auth/login");
 
   const { data: profile, error } = await supabase
     .from("users")
     .select(
-      "email, full_name, phone, birth_date, city, form101_pdf_path, bank_name, bank_branch_number, bank_account_number, role"
+      `
+      email,
+      full_name,
+      role,
+      phone,
+      birth_date,
+      city,
+      id_number,
+      bank_name,
+      bank_branch_number,
+      bank_account_number,
+      car_number,
+      emergency_contact_name,
+      emergency_contact_phone,
+      form101_pdf_path
+    `
     )
     .eq("id", user.id)
     .single();
 
   if (error || !profile) redirect("/");
-  console.log("Profile data:", profile);
+
   return <WorkerSettingsClient initialUserData={profile} />;
 }
