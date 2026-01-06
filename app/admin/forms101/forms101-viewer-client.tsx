@@ -1,44 +1,49 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import type React from "react";
-import { getForm101SignedUrlByPath } from "./actions";
+import { getForm101SignedUrlByFullPath } from "./actions";
 
 type Worker = {
   id: string;
   email: string;
   full_name: string;
+  form101_pdf_path: string | null;
 };
 
 export default function Forms101ViewerClient({ workers }: { workers: Worker[] }) {
-  const currentYear = new Date().getFullYear();
-
-  const years = useMemo(() => {
-    return Array.from({ length: 6 }, (_, i) => currentYear - i);
-  }, [currentYear]);
-
   const [selectedWorkerId, setSelectedWorkerId] = useState("");
-  const [selectedYear, setSelectedYear] = useState(currentYear);
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [signedUrl, setSignedUrl] = useState<string | null>(null);
   const [filePath, setFilePath] = useState<string | null>(null);
 
+  const selectedWorker =
+    workers.find((w) => w.id === selectedWorkerId) ?? null;
+
   const handleFetch = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setSignedUrl(null);
     setFilePath(null);
+    console.log("selectedWorker", selectedWorker);
 
-    if (!selectedWorkerId) {
+    if (!selectedWorker) {
       setError("בחרי עובד.");
+      return;
+    }
+
+    if (!selectedWorker.form101_pdf_path) {
+      setError("אין טופס 101 לעובד שנבחר.");
       return;
     }
 
     setIsLoading(true);
     try {
-      const res = await getForm101SignedUrlByPath(selectedWorkerId, selectedYear);
+      const res = await getForm101SignedUrlByFullPath(
+        selectedWorker.form101_pdf_path
+      );
 
       if (!res.ok) {
         setError(res.message);
@@ -77,22 +82,14 @@ export default function Forms101ViewerClient({ workers }: { workers: Worker[] })
                     </option>
                   ))}
                 </select>
-              </div>
 
-              <div className="col-12">
-                <label className="form-label">שנה</label>
-                <select
-                  className="form-select"
-                  value={String(selectedYear)}
-                  onChange={(e) => setSelectedYear(Number(e.target.value))}
-                  disabled={isLoading}
-                >
-                  {years.map((y) => (
-                    <option key={y} value={y}>
-                      {y}
-                    </option>
-                  ))}
-                </select>
+                {selectedWorkerId && (
+                  <div className="form-text">
+                    {selectedWorker?.form101_pdf_path
+                      ? "יש טופס 101 ✅"
+                      : "אין טופס 101 ❌"}
+                  </div>
+                )}
               </div>
 
               {error && (

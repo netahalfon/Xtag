@@ -29,23 +29,22 @@ export async function updateWorkerProfile(update: WorkerProfileUpdate) {
 
   if (authError || !user) throw new Error("Not authenticated");
 
-const payload = {
-  phone: update.phone,
-  birth_date: update.birth_date,
-  city: update.city,
+  const payload = {
+    phone: update.phone,
+    birth_date: update.birth_date,
+    city: update.city,
 
-  bank_name: update.bank_name,
-  bank_branch_number: update.bank_branch_number,
-  bank_account_number: update.bank_account_number,
+    bank_name: update.bank_name,
+    bank_branch_number: update.bank_branch_number,
+    bank_account_number: update.bank_account_number,
 
-  car_number: update.car_number,
+    car_number: update.car_number,
 
-  emergency_contact_name: update.emergency_contact_name,
-  emergency_contact_phone: update.emergency_contact_phone,
+    emergency_contact_name: update.emergency_contact_name,
+    emergency_contact_phone: update.emergency_contact_phone,
 
-  form101_pdf_path: update.form101_pdf_path,
-};
-
+    form101_pdf_path: update.form101_pdf_path,
+  };
 
   const { error } = await supabase
     .from("users")
@@ -79,7 +78,7 @@ export async function uploadForm101(formData: FormData) {
   const ddmmyyyy = `${dd}-${mm}-${year}`;
   const timestamp = Date.now();
 
-  const filePath = `${year}/${idNumber}_${ddmmyyyy}_${timestamp}.pdf`;
+  const filePath = `${year}/${idNumber}_${ddmmyyyy}_${timestamp}/form101.pdf`;
 
   const { error: uploadError } = await supabase.storage
     .from("forms101")
@@ -96,4 +95,3 @@ export async function uploadForm101(formData: FormData) {
 
   return { ok: true, filePath };
 }
-

@@ -6,6 +6,7 @@ type Worker = {
   id: string;
   email: string;
   full_name: string;
+  form101_pdf_path: string | null;
 };
 
 export default async function Forms101Page() {
@@ -28,8 +29,10 @@ export default async function Forms101Page() {
 
   const { data: workers } = await supabase
     .from("users")
-    .select("id,email,full_name")
+    .select("id,email,full_name,form101_pdf_path")
     .order("full_name", { ascending: true });
+
+    console.log("workers", workers);
 
   return <Forms101ViewerClient workers={(workers ?? []) as Worker[]} />;
 }
