@@ -60,35 +60,40 @@ const payload = {
 export async function uploadForm101(formData: FormData) {
   const supabase = await createClient();
 
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
-
+  const { data, error: authError } = await supabase.auth.getUser();
+  const user = data?.user;
   if (authError || !user) throw new Error("Not authenticated");
 
   const file = formData.get("file");
   if (!(file instanceof File)) throw new Error("Missing file");
   if (file.type !== "application/pdf") throw new Error("Only PDF allowed");
 
-  const fileExt = file.name.split(".").pop() ?? "pdf";
-  const year = new Date().getFullYear();
-  const filePath = `${year}/${user.id}/form101.${fileExt}`;
+  const idRaw = formData.get("id_number");
+  const idNumber = typeof idRaw === "string" ? idRaw.replace(/\D/g, "") : "";
+  if (idNumber.length !== 9) throw new Error("Missing/invalid id_number");
+
+  const now = new Date();
+  const year = String(now.getFullYear());
+  const dd = String(now.getDate()).padStart(2, "0");
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const ddmmyyyy = `${dd}-${mm}-${year}`;
+  const timestamp = Date.now();
+
+  const filePath = `${year}/${idNumber}_${ddmmyyyy}_${timestamp}.pdf`;
 
   const { error: uploadError } = await supabase.storage
-    .from("forms101") // bucket name
-    .upload(filePath, file, { upsert: true, contentType: "application/pdf" });
+    .from("forms101")
+    .upload(filePath, file, { upsert: false, contentType: "application/pdf" });
 
   if (uploadError) throw new Error(uploadError.message);
 
   const { error: dbError } = await supabase
     .from("users")
-    .update({
-      form101_pdf_path: filePath,
-    })
+    .update({ form101_pdf_path: filePath })
     .eq("id", user.id);
 
   if (dbError) throw new Error(dbError.message);
 
   return { ok: true, filePath };
 }
+

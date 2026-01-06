@@ -111,9 +111,8 @@ export default function WorkerSettingsClient({
     try {
       const fd = new FormData();
       fd.append("file", file);
-
+      fd.append("id_number", userData.id_number);
       const res = await uploadForm101(fd);
-
       setUserData((prev) => ({ ...prev, form101_pdf_path: res.filePath }));
       setEditedData((prev) => ({ ...prev, form101_pdf_path: res.filePath }));
     } catch (err: any) {
@@ -280,7 +279,6 @@ export default function WorkerSettingsClient({
                     : "border-gray-200"
                 }
               />
-              
             </div>
 
             {/* Car Number - Editable (optional) */}
@@ -308,9 +306,11 @@ export default function WorkerSettingsClient({
             <div className="pt-2">
               <div className="space-y-4">
                 <div>
-                  <Label className="text-black font-medium"> שם איש קשר לחירום</Label>
+                  <Label className="text-black font-medium">
+                    {" "}
+                    שם איש קשר לחירום
+                  </Label>
                   <Input
-                  
                     value={currentData.emergency_contact_name ?? ""}
                     onChange={(e) =>
                       handleInputChange(
@@ -463,19 +463,15 @@ export default function WorkerSettingsClient({
                   )}
                 </div>
 
-                {!currentData.form101_pdf_path && (
-                  <div>
-                    <Input
-                      type="file"
-                      accept="application/pdf"
-                      onChange={handleFileUpload}
-                      disabled={uploadingFile}
-                      className="cursor-pointer file:mr-4 file:px-4 file:py-2 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-orange-500 file:text-white hover:file:bg-orange-600 file:cursor-pointer"
-                    />
-                    {uploadingFile && (
-                      <p className="text-sm text-orange-600 mt-1">מעלה...</p>
-                    )}
-                  </div>
+                <Input
+                  type="file"
+                  accept="application/pdf"
+                  onChange={handleFileUpload}
+                  disabled={uploadingFile}
+                  className="cursor-pointer file:mr-4 file:px-4 file:py-2 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-orange-500 file:text-white hover:file:bg-orange-600 file:cursor-pointer"
+                />
+                {uploadingFile && (
+                  <p className="text-sm text-orange-600 mt-1">מעלה...</p>
                 )}
               </div>
             </div>
