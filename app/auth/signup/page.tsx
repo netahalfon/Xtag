@@ -49,6 +49,7 @@ export default function SignupPage() {
   // Form 101 temp upload
   const [form101TempPath, setForm101TempPath] = useState<string | null>(null);
   const [uploading101, setUploading101] = useState(false);
+  const [bankDetailsConfirmed, setBankDetailsConfirmed] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -248,6 +249,11 @@ export default function SignupPage() {
 
     if (!form101TempPath) {
       setError("חובה להעלות טופס 101 (PDF) לפני הרשמה");
+      setIsLoading(false);
+      return;
+    }
+    if (!bankDetailsConfirmed) {
+      setError("יש לאשר שפרטי הבנק שהוזנו נכונים ומעודכנים לפני הרשמה");
       setIsLoading(false);
       return;
     }
@@ -582,6 +588,27 @@ export default function SignupPage() {
                 {error}
               </div>
             )}
+
+            <div className="mb-3">
+              <label
+                htmlFor="bankDetailsConfirmed"
+                className="flex items-start gap-2 cursor-pointer text-sm text-gray-500"
+                dir="rtl"
+              >
+                <input
+                  type="checkbox"
+                  id="bankDetailsConfirmed"
+                  checked={bankDetailsConfirmed}
+                  onChange={(e) => setBankDetailsConfirmed(e.target.checked)}
+                  disabled={isLoading}
+                  className="mt-1"
+                />
+                <span>
+                  אני מאשר/ת כי פרטי הבנק/התשלום שהזנתי נכונים ומעודכנים,
+                  והאחריות לכל טעות בהזנה חלה עליי בלבד.
+                </span>
+              </label>
+            </div>
 
             <button
               type="submit"
