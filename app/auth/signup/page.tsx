@@ -6,21 +6,83 @@ import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+const bankNames = [
+  'בנק יהב לעובדי המדינה בע"מ (מספר בנק - 4)',
+  'בנק לאומי לישראל בע"מ (מספר בנק - 10)',
+  'בנק דיסקונט לישראל בע"מ (מספר בנק - 11)',
+  'בנק הפועלים בע"מ (מספר בנק - 12)',
+  'בנק אגוד לישראל בע"מ (מספר בנק - 13)',
+  'בנק אוצר החייל בע"מ (מספר בנק - 14)',
+  'בנק מרכנתיל דיסקונט בע"מ (מספר בנק - 17)',
+  'בנק מזרחי טפחות בע"מ (מספר בנק - 20)',
+  "בנק הדואר (מספר בנק - 9)",
+  "Citibank N.A (מספר בנק - 22)",
+  "HSBC Bank plc (מספר בנק - 23)",
+  'יובנק בע"מ (מספר בנק - 26)',
+  "Barclays Bank PLC (מספר בנק - 27)",
+  'הבנק הבינלאומי הראשון לישראל בע"מ (מספר בנק - 31)',
+  'בנק מסד בע"מ (מספר בנק - 46)',
+  'בנק ירושלים בע"מ (מספר בנק - 54)',
+  "בנק ישראל (מספר בנק - 99)",
+];
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
+
+  // NEW: missing fields
+  const [phone, setPhone] = useState("");
+  const [birthDate, setBirthDate] = useState(""); // YYYY-MM-DD
+  const [city, setCity] = useState("");
+  const [idNumber, setIdNumber] = useState("");
+
+  const [bankName, setBankName] = useState("");
+  const [bankBranchNumber, setBankBranchNumber] = useState("");
+  const [bankAccountNumber, setBankAccountNumber] = useState("");
+
+  const [carNumber, setCarNumber] = useState(""); // optional
+
+  const [emergencyContactName, setEmergencyContactName] = useState("");
+  const [emergencyContactPhone, setEmergencyContactPhone] = useState("");
+
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+
+  // NEW: minimal helpers
+  const digitsOnly = (v: string) => v.replace(/[^\d]/g, "");
+  const isEmailValid = (v: string) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
+
+  const isPhoneValid = (v: string) => {
+    const d = digitsOnly(v);
+    return d.length === 10 && d.startsWith("0");
+  };
+
+  const isIdValid = (id: string) => {
+    const str = digitsOnly(id).padStart(9, "0");
+    if (!/^\d{9}$/.test(str)) return false;
+
+    const sum = str
+      .split("")
+      .map((ch, i) => {
+        let n = Number(ch) * ((i % 2) + 1);
+        if (n > 9) n -= 9;
+        return n;
+      })
+      .reduce((a, b) => a + b, 0);
+
+    return sum % 10 === 0;
+  };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
 
+    // existing validations
     if (password !== confirmPassword) {
       setError("הסיסמאות לא תואמות");
       setIsLoading(false);
@@ -29,6 +91,86 @@ export default function SignupPage() {
 
     if (password.length < 6) {
       setError("הסיסמה חייבת להכיל לפחות 6 תווים");
+      setIsLoading(false);
+      return;
+    }
+
+    // NEW: minimal validations for new fields
+    if (!fullName.trim()) {
+      setError("חובה להזין שם מלא");
+      setIsLoading(false);
+      return;
+    }
+
+    if (!email.trim() || !isEmailValid(email)) {
+      setError("אימייל לא תקין");
+      setIsLoading(false);
+      return;
+    }
+
+    if (!phone.trim() || !isPhoneValid(phone)) {
+      setError("טלפון לא תקין (לדוגמה: 05XXXXXXXX)");
+      setIsLoading(false);
+      return;
+    }
+
+    if (!birthDate) {
+      setError("חובה להזין תאריך לידה");
+      setIsLoading(false);
+      return;
+    }
+
+    if (!city.trim()) {
+      setError("חובה להזין כתובת/עיר");
+      setIsLoading(false);
+      return;
+    }
+
+    const cleanedId = digitsOnly(idNumber);
+    if (!cleanedId || cleanedId.length !== 9 || !isIdValid(cleanedId)) {
+      setError("תעודת זהות לא תקינה");
+      setIsLoading(false);
+      return;
+    }
+
+    if (!bankName.trim()) {
+      setError("חובה להזין שם בנק");
+      setIsLoading(false);
+      return;
+    }
+
+    if (
+      !bankBranchNumber.trim() ||
+      !/^\d{2,5}$/.test(digitsOnly(bankBranchNumber))
+    ) {
+      setError("מספר סניף לא תקין");
+      setIsLoading(false);
+      return;
+    }
+
+    if (
+      !bankAccountNumber.trim() ||
+      !/^\d{5,12}$/.test(digitsOnly(bankAccountNumber))
+    ) {
+      setError("מספר חשבון לא תקין");
+      setIsLoading(false);
+      return;
+    }
+
+    if (carNumber.trim() && !/^\d{7,8}$/.test(digitsOnly(carNumber))) {
+      setError("מספר רכב לא תקין (7–8 ספרות)");
+      setIsLoading(false);
+      return;
+    }
+
+    if (!emergencyContactName.trim()) {
+      setError("חובה להזין שם איש קשר לחירום");
+      setIsLoading(false);
+      return;
+    }
+
+    if (!emergencyContactPhone.trim() || !isPhoneValid(emergencyContactPhone)) {
+      setError("טלפון לחירום לא תקין (לדוגמה: 05XXXXXXXX)");
       setIsLoading(false);
       return;
     }
@@ -46,6 +188,19 @@ export default function SignupPage() {
           data: {
             full_name: fullName,
             role: "worker",
+            phone: digitsOnly(phone),
+            birth_date: birthDate,
+            city: city.trim(),
+            id_number: cleanedId,
+
+            bank_name: bankName.trim(),
+            bank_branch_number: digitsOnly(bankBranchNumber),
+            bank_account_number: digitsOnly(bankAccountNumber),
+
+            car_number: carNumber.trim() ? digitsOnly(carNumber) : null,
+
+            emergency_contact_name: emergencyContactName.trim(),
+            emergency_contact_phone: digitsOnly(emergencyContactPhone),
           },
         },
       });
@@ -68,6 +223,7 @@ export default function SignupPage() {
           <h2 className="card-title text-center mb-4">הרשמה</h2>
 
           <form onSubmit={handleSignup}>
+            {/* existing fields - unchanged */}
             <div className="mb-3">
               <label htmlFor="fullName" className="form-label">
                 שם מלא
@@ -96,10 +252,80 @@ export default function SignupPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isLoading}
-                style={{ direction: "ltr" }} // אימייל נוח יותר ב-LTR
+                style={{ direction: "ltr" }}
               />
             </div>
 
+            {/* NEW fields (added, same style) */}
+            <div className="mb-3">
+              <label htmlFor="phone" className="form-label">
+                טלפון
+              </label>
+              <input
+                type="tel"
+                className="form-control"
+                id="phone"
+                placeholder="05XXXXXXXX"
+                required
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                disabled={isLoading}
+                style={{ direction: "ltr" }}
+              />
+            </div>
+
+            <div className="mb-3">
+              <label htmlFor="birthDate" className="form-label">
+                תאריך לידה
+              </label>
+              <input
+                type="date"
+                className="form-control"
+                id="birthDate"
+                required
+                value={birthDate}
+                onChange={(e) => setBirthDate(e.target.value)}
+                disabled={isLoading}
+                style={{ direction: "ltr" }}
+              />
+            </div>
+
+            <div className="mb-3">
+              <label htmlFor="city" className="form-label">
+                כתובת
+              </label>
+              <input
+                type="text"
+                className="form-control"
+                id="city"
+                required
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                disabled={isLoading}
+              />
+            </div>
+
+            <div className="mb-3">
+              <label htmlFor="idNumber" className="form-label">
+                תעודת זהות
+              </label>
+              <input
+                type="text"
+                className="form-control"
+                id="idNumber"
+                placeholder="9 ספרות"
+                required
+                value={idNumber}
+                onChange={(e) =>
+                  setIdNumber(digitsOnly(e.target.value).slice(0, 9))
+                }
+                disabled={isLoading}
+                style={{ direction: "ltr" }}
+              />
+              <div className="form-text">9 ספרות בלבד</div>
+            </div>
+
+            {/* original password fields - unchanged */}
             <div className="mb-3">
               <label htmlFor="password" className="form-label">
                 סיסמה
@@ -112,7 +338,7 @@ export default function SignupPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
-                style={{ direction: "ltr" }} // סיסמה נוח יותר ב-LTR
+                style={{ direction: "ltr" }}
               />
               <div className="form-text">חייבת להכיל לפחות 6 תווים</div>
             </div>
@@ -129,7 +355,116 @@ export default function SignupPage() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 disabled={isLoading}
-                style={{ direction: "ltr" }} // סיסמה נוח יותר ב-LTR
+                style={{ direction: "ltr" }}
+              />
+            </div>
+
+            {/* NEW bank fields */}
+            <div className="mb-3">
+              <label htmlFor="bankName" className="form-label">
+                שם בנק
+              </label>
+              <select
+                id="bankName"
+                className="form-control"
+                required
+                value={bankName}
+                onChange={(e) => setBankName(e.target.value)}
+                disabled={isLoading}
+              >
+                <option value="">בחרי בנק</option>
+                {bankNames.map((bank) => (
+                  <option key={bank} value={bank}>
+                    {bank}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="mb-3">
+              <label htmlFor="bankBranchNumber" className="form-label">
+                מספר סניף
+              </label>
+              <input
+                type="text"
+                className="form-control"
+                id="bankBranchNumber"
+                required
+                value={bankBranchNumber}
+                onChange={(e) =>
+                  setBankBranchNumber(digitsOnly(e.target.value).slice(0, 5))
+                }
+                disabled={isLoading}
+                style={{ direction: "ltr" }}
+              />
+            </div>
+
+            <div className="mb-3">
+              <label htmlFor="bankAccountNumber" className="form-label">
+                מספר חשבון
+              </label>
+              <input
+                type="text"
+                className="form-control"
+                id="bankAccountNumber"
+                required
+                value={bankAccountNumber}
+                onChange={(e) =>
+                  setBankAccountNumber(digitsOnly(e.target.value).slice(0, 12))
+                }
+                disabled={isLoading}
+                style={{ direction: "ltr" }}
+              />
+            </div>
+
+            {/* NEW optional car number */}
+            <div className="mb-3">
+              <label htmlFor="carNumber" className="form-label">
+                מספר רכב <span className="text-muted">(לא חובה)</span>
+              </label>
+              <input
+                type="text"
+                className="form-control"
+                id="carNumber"
+                value={carNumber}
+                onChange={(e) =>
+                  setCarNumber(digitsOnly(e.target.value).slice(0, 8))
+                }
+                disabled={isLoading}
+                style={{ direction: "ltr" }}
+              />
+            </div>
+
+            {/* NEW emergency fields */}
+            <div className="mb-3">
+              <label htmlFor="emergencyContactName" className="form-label">
+                שם איש קשר לחירום
+              </label>
+              <input
+                type="text"
+                className="form-control"
+                id="emergencyContactName"
+                required
+                value={emergencyContactName}
+                onChange={(e) => setEmergencyContactName(e.target.value)}
+                disabled={isLoading}
+              />
+            </div>
+
+            <div className="mb-3">
+              <label htmlFor="emergencyContactPhone" className="form-label">
+                טלפון לחירום
+              </label>
+              <input
+                type="tel"
+                className="form-control"
+                id="emergencyContactPhone"
+                placeholder="05XXXXXXXX"
+                required
+                value={emergencyContactPhone}
+                onChange={(e) => setEmergencyContactPhone(e.target.value)}
+                disabled={isLoading}
+                style={{ direction: "ltr" }}
               />
             </div>
 
