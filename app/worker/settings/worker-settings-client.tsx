@@ -130,13 +130,10 @@ export default function WorkerSettingsClient({
       try {
         await updateWorkerProfile({
           // match your required payload fields:
-          full_name: editedData.full_name,
-          role: "worker",
 
           phone: digitsOnly(editedData.phone),
           birth_date: editedData.birth_date,
           city: editedData.city?.trim(),
-          id_number: digitsOnly(editedData.id_number),
 
           bank_name: editedData.bank_name?.trim(),
           bank_branch_number: digitsOnly(editedData.bank_branch_number),
@@ -283,9 +280,7 @@ export default function WorkerSettingsClient({
                     : "border-gray-200"
                 }
               />
-              <p className="text-xs text-gray-500 mt-1">
-                אפשר להזין כתובת מלאה (רחוב/מספר/עיר).
-              </p>
+              
             </div>
 
             {/* Car Number - Editable (optional) */}
@@ -311,13 +306,9 @@ export default function WorkerSettingsClient({
 
             {/* Emergency Contact */}
             <div className="pt-2">
-              <h3 className="text-base font-semibold text-black mb-3">
-                איש קשר לחירום
-              </h3>
-
               <div className="space-y-4">
                 <div>
-                  <Label className="text-black font-medium">שם איש קשר</Label>
+                  <Label className="text-black font-medium"> שם איש קשר לחירום</Label>
                   <Input
                   
                     value={currentData.emergency_contact_name ?? ""}
@@ -338,7 +329,7 @@ export default function WorkerSettingsClient({
 
                 <div>
                   <Label className="text-black font-medium">
-                    טלפון איש קשר
+                    טלפון איש קשר לחירום
                   </Label>
                   <Input
                     value={currentData.emergency_contact_phone ?? ""}

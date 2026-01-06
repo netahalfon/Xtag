@@ -6,14 +6,20 @@ export type WorkerProfileUpdate = {
   phone: string;
   birth_date: string;
   city: string;
+
   bank_name: string;
   bank_branch_number: string;
   bank_account_number: string;
+
+  car_number: string | null;
+
+  emergency_contact_name: string;
+  emergency_contact_phone: string;
+
   form101_pdf_path: string | null;
 };
 
 export async function updateWorkerProfile(update: WorkerProfileUpdate) {
-  
   const supabase = await createClient();
 
   const {
@@ -23,9 +29,27 @@ export async function updateWorkerProfile(update: WorkerProfileUpdate) {
 
   if (authError || !user) throw new Error("Not authenticated");
 
+const payload = {
+  phone: update.phone,
+  birth_date: update.birth_date,
+  city: update.city,
+
+  bank_name: update.bank_name,
+  bank_branch_number: update.bank_branch_number,
+  bank_account_number: update.bank_account_number,
+
+  car_number: update.car_number,
+
+  emergency_contact_name: update.emergency_contact_name,
+  emergency_contact_phone: update.emergency_contact_phone,
+
+  form101_pdf_path: update.form101_pdf_path,
+};
+
+
   const { error } = await supabase
     .from("users")
-    .update(update)
+    .update(payload)
     .eq("id", user.id);
 
   if (error) throw new Error(error.message);
@@ -60,7 +84,7 @@ export async function uploadForm101(formData: FormData) {
   const { error: dbError } = await supabase
     .from("users")
     .update({
-      form101_pdf_path: filePath
+      form101_pdf_path: filePath,
     })
     .eq("id", user.id);
 
