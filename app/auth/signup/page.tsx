@@ -46,6 +46,9 @@ export default function SignupPage() {
 
   const [emergencyContactName, setEmergencyContactName] = useState("");
   const [emergencyContactPhone, setEmergencyContactPhone] = useState("");
+  // Form 101 temp upload
+  const [form101TempPath, setForm101TempPath] = useState<string | null>(null);
+  const [uploading101, setUploading101] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -75,6 +78,74 @@ export default function SignupPage() {
       .reduce((a, b) => a + b, 0);
 
     return sum % 10 === 0;
+  };
+
+  const handleForm101Upload = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!fullName.trim()) {
+      setError("יש להזין שם מלא לפני העלאת טופס 101");
+      return;
+    }
+
+    if (file.type !== "application/pdf") {
+      setError("אנא העלי טופס 101 בפורמט PDF בלבד");
+      return;
+    }
+
+    // (תואם למה שהגדרת במסך יצירת bucket: 5MB)
+    const maxBytes = 5 * 1024 * 1024;
+    if (file.size > maxBytes) {
+      setError("הקובץ גדול מדי (מקסימום 5MB)");
+      return;
+    }
+
+    setError(null);
+    setUploading101(true);
+
+    try {
+      const supabase = createClient();
+
+      const token =
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+      const today = new Date();
+
+      const year = today.getFullYear();
+      const day = String(today.getDate()).padStart(2, "0");
+      const month = String(today.getMonth() + 1).padStart(2, "0");
+
+      // ניקוי שם מלא → lowercase + underscores
+      const safeFullName = fullName
+        .trim()
+        .replace(/\s+/g, "_") // רווחים → _
+        .replace(/[^\w\u0590-\u05FF]/g, "") // השאר עברית / אנגלית / _
+        .toLowerCase();
+
+      const timestamp = Date.now();
+      const filePath = `${year}/${safeFullName}_${day}_${month}_${year}_${timestamp}.pdf`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("forms101") // bucket name
+        .upload(filePath, file, {
+          upsert: false,
+          contentType: "application/pdf",
+        });
+
+      if (uploadError) throw uploadError;
+
+      setForm101TempPath(filePath);
+    } catch (err: any) {
+      setForm101TempPath(null);
+      setError(err?.message ?? "שגיאה בהעלאת טופס 101");
+    } finally {
+      setUploading101(false);
+    }
   };
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -175,6 +246,12 @@ export default function SignupPage() {
       return;
     }
 
+    if (!form101TempPath) {
+      setError("חובה להעלות טופס 101 (PDF) לפני הרשמה");
+      setIsLoading(false);
+      return;
+    }
+
     const supabase = createClient();
 
     try {
@@ -201,6 +278,7 @@ export default function SignupPage() {
 
             emergency_contact_name: emergencyContactName.trim(),
             emergency_contact_phone: digitsOnly(emergencyContactPhone),
+            form101_pdf_path: form101TempPath,
           },
         },
       });
@@ -466,6 +544,37 @@ export default function SignupPage() {
                 disabled={isLoading}
                 style={{ direction: "ltr" }}
               />
+            </div>
+
+            {/* Form 101 upload (TEMP) */}
+            <div className="mb-3">
+              <label htmlFor="form101" className="form-label">
+                טופס 101 (PDF) <span className="text-danger">*</span>
+              </label>
+
+              <input
+                type="file"
+                className="form-control"
+                id="form101"
+                accept="application/pdf"
+                onChange={handleForm101Upload}
+                disabled={isLoading || uploading101}
+              />
+
+              <div className="form-text">
+                {uploading101
+                  ? "מעלה..."
+                  : form101TempPath
+                  ? "הקובץ הועלה ✅"
+                  : "חובה להעלות טופס 101 לפני הרשמה"}
+              </div>
+
+              {/* אופציונלי: להציג נתיב (אני אישית לא הייתי מציג בפרוד) */}
+              {form101TempPath && (
+                <div className="form-text" style={{ direction: "ltr" }}>
+                  {form101TempPath}
+                </div>
+              )}
             </div>
 
             {error && (
