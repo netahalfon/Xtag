@@ -24,6 +24,7 @@ const navItemsAdmin = [
   { name: "משמרות", href: "/admin/all-shifts" },
   { name: "עובדים", href: "/admin/all-workers" },
   { name: "טפסי 101", href: "/admin/forms101" },
+  { name: "משכורות", href: "/admin/payroll" },
 ];
 
 type Role = "worker" | "manager" | "admin" | null;
