@@ -374,7 +374,7 @@ export default function SignupPage() {
 
             <div className="mb-3">
               <label htmlFor="city" className="form-label">
-                כתובת
+                כתובת מגורים מלאה
               </label>
               <input
                 type="text"
