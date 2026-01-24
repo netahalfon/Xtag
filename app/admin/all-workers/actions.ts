@@ -44,6 +44,10 @@ export async function updateUser(updated: User) {
       bank_name: updated.bank_name,
       bank_branch_number: updated.bank_branch_number,
       bank_account_number: updated.bank_account_number,
+      id_number: updated.id_number,
+      car_number: updated.car_number, // string | null
+      emergency_contact_name: updated.emergency_contact_name,
+      emergency_contact_phone: updated.emergency_contact_phone,
     })
     .eq("id", updated.id)
 

@@ -57,30 +57,29 @@ export function WorkerDetails({
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-const handleDelete = async () => {
-  try {
-    await deleteUser(user.id); // ✅ מוחק מה-DB
+  const handleDelete = async () => {
+    try {
+      await deleteUser(user.id); // ✅ מוחק מה-DB
 
-    onDeleted(user.id); // ✅ מוחק מהמערך 
-    console.log("Deleted user:", user.full_name);
+      onDeleted(user.id); // ✅ מוחק מהמערך
+      console.log("Deleted user:", user.full_name);
 
-    toast({
-      title: "העובד נמחק בהצלחה",
-      description: "העובד הוסר מהמערכת",
-      variant: "destructive",
-    });
+      toast({
+        title: "העובד נמחק בהצלחה",
+        description: "העובד הוסר מהמערכת",
+        variant: "destructive",
+      });
 
-    onBack(); // ✅ חוזר לטבלה
-  } catch (err: any) {
-    console.error("Error deleting user:", err);
-    toast({
-      title: "מחיקה נכשלה",
-      description: err?.message ?? "נסה שוב",
-      variant: "destructive",
-    });
-  }
-};
-
+      onBack(); // ✅ חוזר לטבלה
+    } catch (err: any) {
+      console.error("Error deleting user:", err);
+      toast({
+        title: "מחיקה נכשלה",
+        description: err?.message ?? "נסה שוב",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleSave = async () => {
     await updateUser(formData);
@@ -127,7 +126,7 @@ const handleDelete = async () => {
                 </AlertDialogTitle>
                 <AlertDialogDescription className="text-right">
                   פעולה זו תמחק את העובד לצמיתות. לא ניתן לשחזר את הפעולה.
-                    <br />
+                  <br />
                   כל הנתונים הקשורים לעובד זה יוסרו מהמערכת.
                 </AlertDialogDescription>
               </AlertDialogHeader>
@@ -218,12 +217,49 @@ const handleDelete = async () => {
 
               <div className="space-y-2">
                 <Label htmlFor="city" className="text-right block text-black">
-                  עיר
+                  כתובת מגורים מלאה{" "}
                 </Label>
                 <Input
                   id="city"
                   value={formData.city ?? ""}
                   onChange={(e) => handleInputChange("city", e.target.value)}
+                  className="text-right border-gray-200 focus:border-orange-500 focus:ring-orange-500"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label
+                  htmlFor="id_number"
+                  className="text-right block text-black"
+                >
+                  תעודת זהות
+                </Label>
+                <Input
+                  id="id_number"
+                  value={formData.id_number ?? ""}
+                  onChange={(e) =>
+                    handleInputChange("id_number", e.target.value)
+                  }
+                  className="text-right border-gray-200 focus:border-orange-500 focus:ring-orange-500"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label
+                  htmlFor="car_number"
+                  className="text-right block text-black"
+                >
+                  מספר רכב
+                </Label>
+                <Input
+                  id="car_number"
+                  value={formData.car_number ?? ""}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "car_number",
+                      e.target.value === "" ? null : e.target.value
+                    )
+                  }
                   className="text-right border-gray-200 focus:border-orange-500 focus:ring-orange-500"
                 />
               </div>
@@ -281,7 +317,7 @@ const handleDelete = async () => {
                 <Input
                   id="salary_regular"
                   type="text"
-                  value={formData.salary_regular  ?? "0"}
+                  value={formData.salary_regular ?? "0"}
                   onChange={(e) =>
                     handleInputChange("salary_regular", Number(e.target.value))
                   }
@@ -345,7 +381,7 @@ const handleDelete = async () => {
                 </Label>
                 <Input
                   id="bank_branch_number"
-                  value={formData.bank_branch_number  ?? ""}
+                  value={formData.bank_branch_number ?? ""}
                   onChange={(e) =>
                     handleInputChange("bank_branch_number", e.target.value)
                   }
@@ -370,6 +406,10 @@ const handleDelete = async () => {
                 />
               </div>
 
+              <h2 className="text-xl font-semibold text-black border-b border-orange-500 pb-2">
+                טופס 101{" "}
+              </h2>
+
               <div className="space-y-2">
                 <Label
                   htmlFor="form101_pdf_path"
@@ -382,6 +422,49 @@ const handleDelete = async () => {
                   value={formData.form101_pdf_path ?? ""}
                   onChange={(e) =>
                     handleInputChange("form101_pdf_path", e.target.value)
+                  }
+                  className="text-right border-gray-200 focus:border-orange-500 focus:ring-orange-500"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Emergency Contact */}
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold text-black border-b border-orange-500 pb-2">
+              איש קשר לחירום
+            </h2>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label
+                  htmlFor="emergency_contact_name"
+                  className="text-right block text-black"
+                >
+                  שם איש קשר
+                </Label>
+                <Input
+                  id="emergency_contact_name"
+                  value={formData.emergency_contact_name ?? ""}
+                  onChange={(e) =>
+                    handleInputChange("emergency_contact_name", e.target.value)
+                  }
+                  className="text-right border-gray-200 focus:border-orange-500 focus:ring-orange-500"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label
+                  htmlFor="emergency_contact_phone"
+                  className="text-right block text-black"
+                >
+                  טלפון איש קשר
+                </Label>
+                <Input
+                  id="emergency_contact_phone"
+                  value={formData.emergency_contact_phone ?? ""}
+                  onChange={(e) =>
+                    handleInputChange("emergency_contact_phone", e.target.value)
                   }
                   className="text-right border-gray-200 focus:border-orange-500 focus:ring-orange-500"
                 />
