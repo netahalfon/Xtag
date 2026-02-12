@@ -76,7 +76,7 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
     { workerId: "", startTime: "", endTime: "", role: "" },
   ]);
   const [workerErrors, setWorkerErrors] = useState<Record<number, string[]>>(
-    {}
+    {},
   );
 
   const addWorker = () => {
@@ -100,7 +100,7 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
   const updateWorker = (
     index: number,
     field: keyof AssignedWorker,
-    value: string
+    value: string,
   ) => {
     const updated = [...assignedWorkers];
     updated[index] = { ...updated[index], [field]: value };
@@ -341,7 +341,7 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
                     "relative rounded-lg border-2 p-4 transition-all",
                     "border-slate-200 dark:border-slate-700",
                     "hover:border-orange-200 dark:hover:border-orange-800",
-                    "bg-slate-50 dark:bg-slate-800/50"
+                    "bg-slate-50 dark:bg-slate-800/50",
                   )}
                 >
                   {assignedWorkers.length > 1 && (
@@ -358,15 +358,14 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
                   )}
 
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                    
-                      <div className="space-y-2 lg:col-span-2">
-                        <WorkerCombobox
-                          workers={workers}
-                          value={assignedWorker.workerId}
-                          onChange={(id) => updateWorker(index, "workerId", id)}
-                          disabled={isSubmitting}
-                          error={workerErrors[index]?.includes("יש לבחור עובד")}
-                        />
+                    <div className="space-y-2 lg:col-span-2">
+                      <WorkerCombobox
+                        workers={workers}
+                        value={assignedWorker.workerId}
+                        onChange={(id) => updateWorker(index, "workerId", id)}
+                        disabled={isSubmitting}
+                        error={workerErrors[index]?.includes("יש לבחור עובד")}
+                      />
                     </div>
 
                     <div className="space-y-2">
@@ -385,7 +384,7 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
                         className={cn(
                           "border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900",
                           workerErrors[index]?.includes("יש להזין שעת התחלה") &&
-                            "border-red-500 focus-visible:ring-red-500"
+                            "border-red-500 focus-visible:ring-red-500",
                         )}
                         disabled={isSubmitting}
                       />
@@ -407,7 +406,7 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
                         className={cn(
                           "border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900",
                           workerErrors[index]?.includes("יש להזין שעת סיום") &&
-                            "border-red-500 focus-visible:ring-red-500"
+                            "border-red-500 focus-visible:ring-red-500",
                         )}
                         disabled={isSubmitting}
                       />
@@ -428,7 +427,7 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
                           className={cn(
                             "border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900",
                             workerErrors[index]?.includes("יש לבחור תפקיד") &&
-                              "border-red-500 focus:ring-red-500"
+                              "border-red-500 focus:ring-red-500",
                           )}
                         >
                           <SelectValue placeholder="בחר תפקיד" />
