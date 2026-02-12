@@ -671,5 +671,5 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
         )}
       </div>
     </div>
-  );
+  ); 
 }
