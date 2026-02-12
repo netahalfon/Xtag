@@ -23,6 +23,10 @@ import {
   Users,
   Clock,
   CheckCircle2,
+  ShieldCheck,
+  ArrowRight,
+  Briefcase,
+  Mail,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createShiftsAction } from "./actions";
@@ -67,6 +71,9 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // ✅ שלב ביניים (מודאל אישור)
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const [eventDate, setEventDate] = useState("");
   const [eventLocation, setEventLocation] = useState("");
@@ -119,6 +126,7 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
     setIsSubmitted(false);
     setIsSubmitting(false);
     setSubmitError(null);
+    setShowConfirm(false);
     setEventDate("");
     setEventLocation("");
     setEventName("");
@@ -129,14 +137,20 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
     setWorkerErrors({});
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // ✅ במקום לשלוח מיד — עושים "בדיקה + פתיחת מודאל"
+  const handleReview = (e: React.FormEvent) => {
     e.preventDefault();
 
     const errors = validateWorkers(assignedWorkers);
     setWorkerErrors(errors);
     if (Object.keys(errors).length > 0) return;
 
-    // ✅ רק אם באמת הצליח: נציג success screen
+    setSubmitError(null);
+    setShowConfirm(true);
+  };
+
+  // ✅ שליחה אמיתית אחרי אישור במודאל
+  const handleConfirmSubmit = async () => {
     setSubmitError(null);
     setIsSubmitting(true);
 
@@ -149,6 +163,7 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
         assignedWorkers,
       });
 
+      setShowConfirm(false);
       setIsSubmitted(true);
     } catch (err: any) {
       const msg =
@@ -156,13 +171,14 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
         "שמירת המשמרת נכשלה. בדקי הרשאות / שדות חובה / נסי שוב.";
       setSubmitError(msg);
       setIsSubmitted(false);
+      setShowConfirm(false);
       console.error("שגיאה בשמירה:", err);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // ✅ מסך הצלחה (כמו V0) — מופיע רק אחרי הצלחה אמיתית
+  // ✅ מסך הצלחה — מופיע רק אחרי הצלחה אמיתית
   if (isSubmitted) {
     return (
       <div
@@ -199,7 +215,7 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
     );
   }
 
-  // ✅ הטופס (עם חיווי כשלון)
+  // ✅ הטופס (כמו המקורי שלך) + מודאל אישור
   return (
     <div
       dir="rtl"
@@ -222,7 +238,8 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
           </Card>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        {/* ✅ שימי לב: onSubmit הוא handleReview (פותח מודאל) */}
+        <form onSubmit={handleReview} className="space-y-6">
           {/* Event Details Section (לוק V0) */}
           <Card className="p-6 border-2 border-orange-100 dark:border-orange-900/30 bg-white dark:bg-slate-900">
             <div className="flex items-center gap-2 mb-6">
@@ -249,6 +266,7 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
                   placeholder="קונצרט קיץ 2024"
                   required
                   className="border-slate-200 dark:border-slate-700 focus-visible:ring-orange-500"
+                  disabled={isSubmitting}
                 />
               </div>
 
@@ -266,6 +284,7 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
                   onChange={(e) => setEventDate(e.target.value)}
                   required
                   className="border-slate-200 dark:border-slate-700 focus-visible:ring-orange-500"
+                  disabled={isSubmitting}
                 />
               </div>
 
@@ -286,6 +305,7 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
                   placeholder="גן סקר, תל אביב"
                   required
                   className="border-slate-200 dark:border-slate-700 focus-visible:ring-orange-500"
+                  disabled={isSubmitting}
                 />
               </div>
 
@@ -303,6 +323,7 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
                   placeholder="יוסי כהן"
                   required
                   className="border-slate-200 dark:border-slate-700 focus-visible:ring-orange-500"
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
@@ -452,7 +473,7 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
             </div>
           </Card>
 
-          {/* Submit Button */}
+          {/* Submit Button (פותח מודאל, לא שולח מיד) */}
           <div className="flex justify-end">
             <Button
               type="submit"
@@ -460,10 +481,194 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
               className="bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 text-white px-8"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "שולח..." : "שלח משמרת"}
+              שלח משמרת
             </Button>
           </div>
         </form>
+
+        {/* ✅ Confirmation Modal */}
+        {showConfirm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop (בלי סגירה בלחיצה כדי שיהיה "ברור שחייב לאשר") */}
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200" />
+
+            {/* Modal */}
+            <div
+              dir="rtl"
+              className="relative z-10 w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border-2 border-orange-200 dark:border-orange-800 bg-white dark:bg-slate-900 shadow-2xl animate-in zoom-in-95 fade-in duration-300"
+              role="dialog"
+              aria-modal="true"
+            >
+              {/* Header */}
+              <div className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b-2 border-orange-100 dark:border-orange-900/30 bg-gradient-to-l from-orange-50 to-amber-50 dark:from-orange-950/40 dark:to-amber-950/40 px-6 py-5 rounded-t-2xl">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-xl bg-orange-500 p-2.5 shadow-lg shadow-orange-500/25">
+                    <ShieldCheck className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50">
+                      אישור משמרת
+                    </h2>
+                    <p className="text-sm text-slate-600 dark:text-slate-400">
+                      נא לבדוק את הפרטים לפני שליחה
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowConfirm(false)}
+                  disabled={isSubmitting}
+                  className={cn(
+                    "rounded-lg p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:text-slate-300 dark:hover:bg-slate-800 transition-colors",
+                    isSubmitting && "opacity-50 cursor-not-allowed",
+                  )}
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="p-6 space-y-5">
+                {/* Event Summary */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Calendar className="h-4 w-4 text-orange-500" />
+                    <h3 className="text-sm font-semibold uppercase tracking-wider text-orange-600 dark:text-orange-400">
+                      פרטי אירוע
+                    </h3>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="flex flex-col gap-0.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 p-3.5 border border-slate-100 dark:border-slate-700/50">
+                      <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                        שם האירוע
+                      </span>
+                      <span className="text-sm font-semibold text-slate-900 dark:text-slate-50">
+                        {eventName}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-col gap-0.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 p-3.5 border border-slate-100 dark:border-slate-700/50">
+                      <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                        תאריך
+                      </span>
+                      <span className="text-sm font-semibold text-slate-900 dark:text-slate-50">
+                        {eventDate
+                          ? new Date(eventDate).toLocaleDateString("he-IL", {
+                              weekday: "long",
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            })
+                          : ""}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-col gap-0.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 p-3.5 border border-slate-100 dark:border-slate-700/50">
+                      <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                        <span className="inline-flex items-center gap-1">
+                          <MapPin className="h-3 w-3" /> מיקום
+                        </span>
+                      </span>
+                      <span className="text-sm font-semibold text-slate-900 dark:text-slate-50">
+                        {eventLocation}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-col gap-0.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 p-3.5 border border-slate-100 dark:border-slate-700/50">
+                      <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                        מנהל צוות
+                      </span>
+                      <span className="text-sm font-semibold text-slate-900 dark:text-slate-50">
+                        {teamManager}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="h-px bg-slate-200 dark:bg-slate-700" />
+
+                {/* Workers Summary */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Users className="h-4 w-4 text-orange-500" />
+                    <h3 className="text-sm font-semibold uppercase tracking-wider text-orange-600 dark:text-orange-400">
+                      עובדים משובצים ({assignedWorkers.length})
+                    </h3>
+                  </div>
+
+                  <div className="space-y-2.5">
+                    {assignedWorkers.map((aw, index) => {
+                      const worker = workers.find((w) => w.id === aw.workerId);
+
+                      return (
+                        <div
+                          key={index}
+                          className="flex flex-col gap-3 rounded-xl border border-slate-100 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-800/60 p-3.5 sm:flex-row sm:items-center sm:justify-between"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-orange-500 text-white font-bold text-xs shrink-0 shadow-md shadow-orange-500/20">
+                              {worker?.full_name?.charAt(0) ?? "?"}
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-sm font-semibold text-slate-900 dark:text-slate-50">
+                                {worker?.full_name ?? "לא נבחר"}
+                              </span>
+                              {!!worker?.email && (
+                                <span className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
+                                  <Mail className="h-3 w-3" />
+                                  {worker.email}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="inline-flex items-center gap-1.5 rounded-lg bg-orange-100 dark:bg-orange-900/30 px-2.5 py-1 text-xs font-semibold text-orange-700 dark:text-orange-300">
+                              <Briefcase className="h-3 w-3" />
+                              {aw.role || "—"}
+                            </span>
+                            <span className="inline-flex items-center gap-1.5 rounded-lg bg-slate-200 dark:bg-slate-700 px-2.5 py-1 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                              <Clock className="h-3 w-3" />
+                              {aw.startTime || "—"} - {aw.endTime || "—"}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="sticky bottom-0 flex items-center justify-between gap-3 border-t-2 border-orange-100 dark:border-orange-900/30 bg-white dark:bg-slate-900 px-6 py-4 rounded-b-2xl">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="lg"
+                  onClick={() => setShowConfirm(false)}
+                  disabled={isSubmitting}
+                  className="border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 bg-transparent"
+                >
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                  חזרה לעריכה
+                </Button>
+
+                <Button
+                  type="button"
+                  size="lg"
+                  onClick={handleConfirmSubmit}
+                  disabled={isSubmitting}
+                  className="bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 text-white px-8 shadow-lg shadow-orange-500/25"
+                >
+                  <ShieldCheck className="h-4 w-4 ml-2" />
+                  {isSubmitting ? "שולח..." : "אישור ושליחה"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
