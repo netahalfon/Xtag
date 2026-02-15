@@ -4,15 +4,44 @@ import type React from "react";
 
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect } from "react";
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [ready, setReady] = useState(false);
+
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const supabase = createClient();
+
+  useEffect(() => {
+    const run = async () => {
+      const code = searchParams.get("code");
+
+      if (!code) {
+        setError("קישור האיפוס לא תקין. בקשי איפוס חדש מהמייל האחרון.");
+        setReady(true);
+        return;
+      }
+
+      const { error } = await supabase.auth.exchangeCodeForSession(
+        window.location.href,
+      );
+
+      if (error) {
+        setError(error.message);
+      }
+
+      setReady(true);
+    };
+
+    run();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,8 +60,6 @@ export default function ResetPasswordPage() {
       return;
     }
 
-    const supabase = createClient();
-
     try {
       const { error } = await supabase.auth.updateUser({
         password,
@@ -48,6 +75,19 @@ export default function ResetPasswordPage() {
       setIsLoading(false);
     }
   };
+
+  if (!ready) {
+    return (
+      <div className="auth-container" dir="rtl">
+        <div
+          className="card shadow"
+          style={{ maxWidth: "400px", width: "100%" }}
+        >
+          <div className="card-body p-4 text-center">טוען קישור איפוס…</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="auth-container" dir="rtl">
@@ -67,7 +107,7 @@ export default function ResetPasswordPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                disabled={isLoading}
+                disabled={isLoading || !ready}
                 style={{ direction: "ltr" }} // סיסמה נוחה יותר ב-LTR
               />
               <div className="form-text">חייבת להכיל לפחות 6 תווים</div>
@@ -84,7 +124,7 @@ export default function ResetPasswordPage() {
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                disabled={isLoading}
+                disabled={isLoading || !ready}
                 style={{ direction: "ltr" }} // סיסמה נוחה יותר ב-LTR
               />
             </div>
@@ -98,7 +138,7 @@ export default function ResetPasswordPage() {
             <button
               type="submit"
               className="btn btn-primary w-100 mb-3"
-              disabled={isLoading}
+              disabled={isLoading || !ready}
             >
               {isLoading ? (
                 <>
