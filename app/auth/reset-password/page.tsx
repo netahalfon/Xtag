@@ -5,19 +5,56 @@ import type React from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isReady, setIsReady] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    const supabase = createClient();
+
+    (async () => {
+      // Ensure the recovery link is exchanged into a valid session before updating password
+      const { data: sessionRes } = await supabase.auth.getSession();
+
+      if (sessionRes.session) {
+        setIsReady(true);
+        return;
+      }
+
+      const { error: exchangeError } =
+        await supabase.auth.exchangeCodeForSession(window.location.href);
+
+      if (exchangeError) {
+        setError("הלינק לאיפוס סיסמה פג תוקף או לא תקין. תבקשי לינק חדש.");
+        setIsReady(false);
+        return;
+      }
+
+      const { data: sessionAfter } = await supabase.auth.getSession();
+      setIsReady(!!sessionAfter.session);
+
+      if (!sessionAfter.session) {
+        setError("Auth session missing. נסי לבקש לינק חדש.");
+      }
+    })();
+  }, []);
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+
+    if (!isReady) {
+      setError("אין סשן פעיל לאיפוס. תבקשי לינק חדש במייל.");
+      setIsLoading(false);
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError("הסיסמאות לא תואמות");
@@ -67,8 +104,8 @@ export default function ResetPasswordPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                disabled={isLoading}
-                style={{ direction: "ltr" }} // סיסמה נוחה יותר ב-LTR
+                disabled={isLoading || !isReady}
+                style={{ direction: "ltr" }}
               />
               <div className="form-text">חייבת להכיל לפחות 6 תווים</div>
             </div>
@@ -84,8 +121,8 @@ export default function ResetPasswordPage() {
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                disabled={isLoading}
-                style={{ direction: "ltr" }} // סיסמה נוחה יותר ב-LTR
+                disabled={isLoading || !isReady}
+                style={{ direction: "ltr" }}
               />
             </div>
 
@@ -98,7 +135,7 @@ export default function ResetPasswordPage() {
             <button
               type="submit"
               className="btn btn-primary w-100 mb-3"
-              disabled={isLoading}
+              disabled={isLoading || !isReady}
             >
               {isLoading ? (
                 <>
