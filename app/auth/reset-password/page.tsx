@@ -31,7 +31,7 @@ export default function ResetPasswordPage() {
         await supabase.auth.exchangeCodeForSession(window.location.href);
 
       if (exchangeError) {
-        setError("הלינק לאיפוס סיסמה פג תוקף או לא תקין. תבקשי לינק חדש.");
+        setError("הלינק לאיפוס סיסמה פג תוקף או לא תקין. תבקש לינק חדש.");
         setIsReady(false);
         return;
       }
@@ -40,7 +40,7 @@ export default function ResetPasswordPage() {
       setIsReady(!!sessionAfter.session);
 
       if (!sessionAfter.session) {
-        setError("Auth session missing. נסי לבקש לינק חדש.");
+        setError("Auth session missing. נסה לבקש לינק חדש.");
       }
     })();
   }, []);
@@ -51,7 +51,7 @@ export default function ResetPasswordPage() {
     setError(null);
 
     if (!isReady) {
-      setError("אין סשן פעיל לאיפוס. תבקשי לינק חדש במייל.");
+      setError("אין סשן פעיל לאיפוס. תבקש לינק חדש במייל.");
       setIsLoading(false);
       return;
     }
