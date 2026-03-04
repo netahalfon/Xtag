@@ -9,6 +9,7 @@ type PayrollReportRpcRow = {
   phone: string | null;
   email: string | null;
   id_number: string | null;
+  employee_number: string | number | null;
   bank_account_number: string | null;
   bank_name: string | null;
   bank_branch_number: string | null;
@@ -40,7 +41,7 @@ export async function getPayrollReport({
   const supabase = await createClient();
   const { from_date, to_date } = getMonthRange(year, month);
 
-  const { data, error } = await supabase.rpc("payroll_report", {
+  const { data, error } = await supabase.rpc("payroll_report_v2", {
     from_date,
     to_date,
   });
@@ -53,6 +54,8 @@ export async function getPayrollReport({
     fullName: row.full_name ?? "",
     phone: row.phone ?? "",
     email: row.email ?? "",
+    idNumber: row.id_number ?? "",
+    employeeNumber: row.employee_number?.toString() ?? "",
     bankDetails: `בנק: ${row.bank_name ?? ""} | סניף: ${
       row.bank_branch_number ?? ""
     } | חשבון: ${row.bank_account_number ?? ""}`,
