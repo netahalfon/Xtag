@@ -23,12 +23,25 @@ interface Shift {
   wage_bonus?: number;
   travel_amount?: number;
   shift_pay_total?: number;
+  status: "pending" | "approved" | "rejected";
 }
 
 interface ShiftsListProps {
   shifts: Shift[];
-    title?: string
+  title?: string;
 }
+
+const statusLabels = {
+  pending: "ממתין",
+  approved: "מאושר",
+  rejected: "נדחה",
+} as const;
+
+const statusStyles = {
+  pending: "bg-amber-100 text-amber-800",
+  approved: "bg-emerald-100 text-emerald-800",
+  rejected: "bg-red-100 text-red-800",
+} as const;
 
 export function ShiftsList({ shifts, title = "המשמרות שלי" }: ShiftsListProps) {
   const currentDate = new Date();
@@ -74,6 +87,7 @@ export function ShiftsList({ shifts, title = "המשמרות שלי" }: ShiftsLi
   // Calculate total salary
   const totalSalary = useMemo(() => {
     return filteredShifts.reduce((sum, shift) => {
+      if (shift.status !== "approved") return sum;
       return sum + (shift.shift_pay_total || 0);
     }, 0);
   }, [filteredShifts]);
@@ -93,166 +107,184 @@ export function ShiftsList({ shifts, title = "המשמרות שלי" }: ShiftsLi
         {/* Header with filters */}
         <div className="mb-8">
           <h1 className="mb-6 text-3xl font-bold text-black">המשמרות שלי</h1>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-md">
-              {/* Month selector */}
-              <div>
-                <label className="mb-1 block text-sm font-medium text-black">
-                  חודש
-                </label>
-                <Select
-                  value={selectedMonth.toString()}
-                  onValueChange={(value) => setSelectedMonth(Number(value))}
-                >
-                  <SelectTrigger className="border-orange-500 bg-white text-black focus:ring-orange-500">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {monthNames.map((month, index) => (
-                      <SelectItem key={index} value={index.toString()}>
-                        {month}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-md">
+            {/* Month selector */}
+            <div>
+              <label className="mb-1 block text-sm font-medium text-black">
+                חודש
+              </label>
+              <Select
+                value={selectedMonth.toString()}
+                onValueChange={(value) => setSelectedMonth(Number(value))}
+              >
+                <SelectTrigger className="border-orange-500 bg-white text-black focus:ring-orange-500">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {monthNames.map((month, index) => (
+                    <SelectItem key={index} value={index.toString()}>
+                      {month}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-              {/* Year selector */}
-              <div>
-                <label className="mb-1 block text-sm font-medium text-black">
-                  שנה
-                </label>
-                <Select
-                  value={selectedYear.toString()}
-                  onValueChange={(value) => setSelectedYear(Number(value))}
-                >
-                  <SelectTrigger className="border-orange-500 bg-white text-black focus:ring-orange-500">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {yearOptions.map((year) => (
-                      <SelectItem key={year} value={year.toString()}>
-                        {year}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            {/* Year selector */}
+            <div>
+              <label className="mb-1 block text-sm font-medium text-black">
+                שנה
+              </label>
+              <Select
+                value={selectedYear.toString()}
+                onValueChange={(value) => setSelectedYear(Number(value))}
+              >
+                <SelectTrigger className="border-orange-500 bg-white text-black focus:ring-orange-500">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {yearOptions.map((year) => (
+                    <SelectItem key={year} value={year.toString()}>
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Shifts list */}
-        <div className="mb-8 overflow-x-auto">
-          {filteredShifts.length === 0 ? (
-            <Card className="p-8 text-center border-orange-200">
-              <p className="text-black/60">לא נמצאו משמרות לתקופה זו</p>
-            </Card>
-          ) : (
-            <Card className="border-orange-200 shadow-sm">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="bg-orange-50 border-b-2 border-orange-500">
-                    <th className="p-3 text-right text-sm font-bold text-black">
-                      תאריך
-                    </th>
-                    <th className="p-3 text-right text-sm font-bold text-black">
-                      אירוע
-                    </th>
-                    <th className="p-3 text-right text-sm font-bold text-black">
-                      מיקום
-                    </th>
-                    <th className="p-3 text-right text-sm font-bold text-black">
-                      מנהל
-                    </th>
-                    <th className="p-3 text-right text-sm font-bold text-black">
-                      התחלה
-                    </th>
-                    <th className="p-3 text-right text-sm font-bold text-black">
-                      סיום
-                    </th>
-                    <th className="p-3 text-right text-sm font-bold text-black">
-                      שעות
-                    </th>
-                    <th className="p-3 text-right text-sm font-bold text-black">
-                      תעריף/שעה
-                    </th>
-                    <th className="p-3 text-right text-sm font-bold text-black">
-                      בונוס
-                    </th>
-                    <th className="p-3 text-right text-sm font-bold text-black">
-                      נסיעות
-                    </th>
-                    <th className="p-3 text-right text-sm font-bold text-black bg-orange-100">
-                      סה"כ
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredShifts.map((shift, index) => (
-                    <tr
-                      key={shift.id}
-                      className={`border-b border-orange-100 hover:bg-orange-50/50 transition-colors ${
-                        index % 2 === 0 ? "bg-white" : "bg-gray-50/30"
+      {/* Shifts list */}
+      <div className="mb-8 overflow-x-auto">
+        {filteredShifts.length === 0 ? (
+          <Card className="p-8 text-center border-orange-200">
+            <p className="text-black/60">לא נמצאו משמרות לתקופה זו</p>
+          </Card>
+        ) : (
+          <Card className="border-orange-200 shadow-sm">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="bg-orange-50 border-b-2 border-orange-500">
+                  <th className="p-3 text-right text-sm font-bold text-black">
+                    תאריך
+                  </th>
+                  <th className="p-3 text-right text-sm font-bold text-black">
+                    סטטוס
+                  </th>
+                  <th className="p-3 text-right text-sm font-bold text-black">
+                    אירוע
+                  </th>
+                  <th className="p-3 text-right text-sm font-bold text-black">
+                    מיקום
+                  </th>
+                  <th className="p-3 text-right text-sm font-bold text-black">
+                    מנהל
+                  </th>
+                  <th className="p-3 text-right text-sm font-bold text-black">
+                    התחלה
+                  </th>
+                  <th className="p-3 text-right text-sm font-bold text-black">
+                    סיום
+                  </th>
+                  <th className="p-3 text-right text-sm font-bold text-black">
+                    שעות
+                  </th>
+                  <th className="p-3 text-right text-sm font-bold text-black">
+                    תעריף/שעה
+                  </th>
+                  <th className="p-3 text-right text-sm font-bold text-black">
+                    בונוס
+                  </th>
+                  <th className="p-3 text-right text-sm font-bold text-black">
+                    נסיעות
+                  </th>
+                  <th className="p-3 text-right text-sm font-bold text-black bg-orange-100">
+                    סה"כ
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredShifts.map((shift, index) => (
+                  <tr
+                    key={shift.id}
+                    className={`border-b border-orange-100 hover:bg-orange-50/50 transition-colors ${
+                      index % 2 === 0 ? "bg-white" : "bg-gray-50/30"
+                    }`}
+                  >
+                    <td className="p-3 text-sm text-black font-medium">
+                      {formatDate(shift.shift_date)}
+                    </td>
+                    <td className="p-3 text-sm text-black">
+                      <span
+                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                          statusStyles[shift.status]
+                        }`}
+                      >
+                        {statusLabels[shift.status]}
+                      </span>
+                    </td>
+                    <td className="p-3 text-sm text-black">
+                      {shift.event_name}
+                    </td>
+                    <td className="p-3 text-sm text-black">{shift.location}</td>
+                    <td className="p-3 text-sm text-black">{shift.manager}</td>
+                    <td className="p-3 text-sm text-black">
+                      {shift.start_time || "-"}
+                    </td>
+                    <td className="p-3 text-sm text-black">
+                      {shift.end_time || "-"}
+                    </td>
+                    <td className="p-3 text-sm text-black font-medium">
+                      {shift.total_hours ? shift.total_hours.toFixed(1) : "-"}
+                    </td>
+                    <td className="p-3 text-sm text-black">
+                      {shift.hourly_rate ? `₪${shift.hourly_rate}` : "-"}
+                    </td>
+                    <td className="p-3 text-sm text-orange-600 font-medium">
+                      {shift.wage_bonus && shift.wage_bonus > 0
+                        ? `₪${shift.wage_bonus}`
+                        : "-"}
+                    </td>
+                    <td className="p-3 text-sm text-black">
+                      {shift.travel_amount ? `₪${shift.travel_amount}` : "-"}
+                    </td>
+                    <td
+                      className={`p-3 text-sm font-bold bg-orange-50 ${
+                        shift.status === "approved"
+                          ? "text-black"
+                          : shift.status === "pending"
+                            ? "text-gray-400"
+                            : "text-gray-400"
                       }`}
                     >
-                      <td className="p-3 text-sm text-black font-medium">
-                        {formatDate(shift.shift_date)}
-                      </td>
-                      <td className="p-3 text-sm text-black">
-                        {shift.event_name}
-                      </td>
-                      <td className="p-3 text-sm text-black">
-                        {shift.location}
-                      </td>
-                      <td className="p-3 text-sm text-black">
-                        {shift.manager}
-                      </td>
-                      <td className="p-3 text-sm text-black">
-                        {shift.start_time || "-"}
-                      </td>
-                      <td className="p-3 text-sm text-black">
-                        {shift.end_time || "-"}
-                      </td>
-                      <td className="p-3 text-sm text-black font-medium">
-                        {shift.total_hours ? shift.total_hours.toFixed(1) : "-"}
-                      </td>
-                      <td className="p-3 text-sm text-black">
-                        {shift.hourly_rate ? `₪${shift.hourly_rate}` : "-"}
-                      </td>
-                      <td className="p-3 text-sm text-orange-600 font-medium">
-                        {shift.wage_bonus && shift.wage_bonus > 0
-                          ? `₪${shift.wage_bonus}`
-                          : "-"}
-                      </td>
-                      <td className="p-3 text-sm text-black">
-                        {shift.travel_amount ? `₪${shift.travel_amount}` : "-"}
-                      </td>
-                      <td className="p-3 text-sm text-black font-bold bg-orange-50">
-                        {shift.shift_pay_total
+                      {shift.status === "rejected"
+                        ? "-"
+                        : shift.shift_pay_total
                           ? `₪${shift.shift_pay_total}`
-                          : "-"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </Card>
-          )}
-        </div>
-
-        {/* Total salary card */}
-        <Card className="border-orange-500 bg-gradient-to-br from-orange-50 to-white p-6 shadow-lg">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-black">סה"כ משכורת</h2>
-            <p className="text-3xl font-bold text-orange-500">
-              ₪{totalSalary.toLocaleString("he-IL")}
-            </p>
-          </div>
-          <p className="mt-2 text-sm text-black/60">
-            {filteredShifts.length} משמרות ב-{monthNames[selectedMonth]}{" "}
-            {selectedYear}
-          </p>
-        </Card>
+                          : "₪0"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Card>
+        )}
       </div>
+
+      {/* Total salary card */}
+      <Card className="border-orange-500 bg-gradient-to-br from-orange-50 to-white p-6 shadow-lg">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-black">סה"כ משכורת</h2>
+          <p className="text-3xl font-bold text-orange-500">
+            ₪{totalSalary.toLocaleString("he-IL")}
+          </p>
+        </div>
+        <p className="mt-2 text-sm text-black/60">
+          {filteredShifts.length} משמרות ב-{monthNames[selectedMonth]}{" "}
+          {selectedYear}
+        </p>
+      </Card>
+    </div>
   );
 }
