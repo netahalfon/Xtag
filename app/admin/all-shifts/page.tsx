@@ -27,9 +27,10 @@ export default async function AdminAllShiftsPage() {
       *,
       worker:users!shifts_worker_id_fkey (
         full_name,
-        email
+        email,
+        employee_number
       )
-    `
+    `,
     )
     .order("shift_date", { ascending: false });
 

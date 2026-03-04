@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { Navbar } from "@/components/navbar";
 import "./globals.css";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
@@ -46,7 +47,7 @@ export default function RootLayout({
       </head>
       <body className={`font-sans antialiased`}>
         <Navbar />
-        {children}
+        <TooltipProvider>{children}</TooltipProvider>
         <Analytics />
         <script
           src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"

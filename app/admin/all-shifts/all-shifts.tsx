@@ -28,149 +28,106 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Edit2, Save, Trash2 } from "lucide-react";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
+import { Search, Trash2 } from "lucide-react";
 import type { Shift } from "@/types/shift";
 import { updateShift, deleteShift } from "./actions";
+import { ShiftDetailPanel } from "./shift-detail-panel";
+
+import dynamic from "next/dynamic";
+
+const TruncatedTooltip = dynamic(
+  () =>
+    import("@/components/truncated-tooltip").then((m) => m.TruncatedTooltip),
+  { ssr: false },
+);
 
 const roleLabels: Record<Shift["role"], string> = {
   worker: "עובד",
   manager: "מנהל",
 };
 
+const statusLabels: Record<Shift["status"], string> = {
+  pending: "ממתין",
+  approved: "מאושר",
+  rejected: "נדחה",
+};
+
+const statusStyles: Record<Shift["status"], string> = {
+  pending: "bg-amber-100 text-amber-800",
+  approved: "bg-emerald-100 text-emerald-800",
+  rejected: "bg-red-100 text-red-800",
+};
+
 interface AllShiftsProps {
   shifts: Shift[];
 }
 
+const formatILDate = (value: string | Date) => {
+  const d = typeof value === "string" ? new Date(value) : value;
+
+  return new Intl.DateTimeFormat("he-IL", {
+    timeZone: "Asia/Jerusalem",
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit", // 👈 שינוי כאן
+  }).format(d);
+};
+
 export function AllShifts({ shifts: initialShifts }: AllShiftsProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [shifts, setShifts] = useState<Shift[]>(initialShifts);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editedShift, setEditedShift] = useState<Shift | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [shiftToDelete, setShiftToDelete] = useState<string | null>(null);
+  const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
+  const [detailPanelOpen, setDetailPanelOpen] = useState(false);
 
-  // Filter shifts by worker name, email, or event name
   const filteredShifts = shifts.filter((shift) => {
-    const workerName = shift.worker_full_name || shift.worker?.full_name || "";
-    const workerEmail = shift.worker_email || shift.worker?.email || "";
+    const workerName = shift.worker?.full_name || "";
     const query = searchQuery.toLowerCase();
-    return (
+    const matchesSearch =
       workerName.toLowerCase().includes(query) ||
-      workerEmail.toLowerCase().includes(query) ||
-      shift.event_name.toLowerCase().includes(query)
-    );
+      shift.event_name.toLowerCase().includes(query);
+    const matchesStatus =
+      statusFilter === "all" || shift.status === statusFilter;
+    return matchesSearch && matchesStatus;
   });
 
-  // Calculate total hours from start and end time
-  const calculateTotalHours = (startTime: string, endTime: string): number => {
-    const [startHour, startMinute] = startTime.split(":").map(Number);
-    const [endHour, endMinute] = endTime.split(":").map(Number);
-    const startMinutes = startHour * 60 + startMinute;
-    const endMinutes = endHour * 60 + endMinute;
-    const totalMinutes = endMinutes - startMinutes;
-    return Math.round((totalMinutes / 60) * 100) / 100;
+  console.log("🔍 Filtered Shifts:", filteredShifts);
+  const handleRowClick = (shift: Shift) => {
+    setSelectedShift(shift);
+    setDetailPanelOpen(true);
   };
 
-  // Calculate total pay
-  const calculateShiftPayTotal = (
-    totalHours: number,
-    hourlyRate: number,
-    wageBonus: number,
-    travelAmount: number
-  ): number => {
-    if (totalHours <= 8) {
-      return totalHours * hourlyRate + wageBonus + travelAmount;
-    } else if (totalHours > 8 && totalHours <= 10) {
-      return (
-        totalHours * hourlyRate +
-        (totalHours - 8) * hourlyRate * 0.25 +
-        wageBonus +
-        travelAmount
-      );
-    } else {
-      return (
-        totalHours * hourlyRate +
-        2 * hourlyRate * 0.25 +
-        (totalHours - 10) * hourlyRate * 0.5 +
-        wageBonus +
-        travelAmount
-      );
-    }
-  };
-
-  const handleEdit = (shift: Shift) => {
-    setEditingId(shift.id);
-    setEditedShift({ ...shift });
-  };
-
-  const handleCancel = () => {
-    setEditingId(null);
-    setEditedShift(null);
-  };
-
-  const handleFieldChange = (field: keyof Shift, value: string | number) => {
-    if (!editedShift) return;
-
-    const updatedShift = { ...editedShift, [field]: value };
-
-    // Recalculate when time or rate fields change
-    if (field === "start_time" || field === "end_time") {
-      const totalHours = calculateTotalHours(
-        updatedShift.start_time,
-        updatedShift.end_time
-      );
-      updatedShift.total_hours = totalHours;
-      updatedShift.shift_pay_total = calculateShiftPayTotal(
-        totalHours,
-        updatedShift.hourly_rate,
-        updatedShift.wage_bonus,
-        updatedShift.travel_amount
-      );
-    } else if (
-      field === "hourly_rate" ||
-      field === "wage_bonus" ||
-      field === "travel_amount"
-    ) {
-      updatedShift.shift_pay_total = calculateShiftPayTotal(
-        updatedShift.total_hours,
-        updatedShift.hourly_rate,
-        updatedShift.wage_bonus,
-        updatedShift.travel_amount
-      );
-    }
-
-    setEditedShift(updatedShift);
-  };
-
-  const handleSave = async () => {
-    if (!editedShift) return;
-
-    // TODO: Call server API to update shift
-    await updateShift(editedShift);
-
+  const handleShiftSave = async (updatedShift: Shift) => {
+    await updateShift(updatedShift);
     setShifts((prevShifts) =>
-      prevShifts.map((shift) =>
-        shift.id === editedShift.id ? editedShift : shift
-      )
+      prevShifts.map((s) => (s.id === updatedShift.id ? updatedShift : s)),
     );
-    setEditingId(null);
-    setEditedShift(null);
+    setSelectedShift(updatedShift);
   };
 
-  const handleDeleteClick = (shiftId: string) => {
+  const handleDeleteClick = (e: React.MouseEvent, shiftId: string) => {
+    e.stopPropagation();
     setShiftToDelete(shiftId);
     setDeleteDialogOpen(true);
   };
 
   const handleDeleteConfirm = async () => {
     if (!shiftToDelete) return;
-
     await deleteShift(shiftToDelete);
-    
-
     setShifts((prevShifts) =>
-      prevShifts.filter((shift) => shift.id !== shiftToDelete)
+      prevShifts.filter((shift) => shift.id !== shiftToDelete),
     );
+    if (selectedShift?.id === shiftToDelete) {
+      setDetailPanelOpen(false);
+      setSelectedShift(null);
+    }
     setDeleteDialogOpen(false);
     setShiftToDelete(null);
   };
@@ -181,71 +138,85 @@ export function AllShifts({ shifts: initialShifts }: AllShiftsProps) {
   };
 
   return (
-    <div dir="rtl" className="min-h-screen bg-white p-6">
-      <div className="mx-auto max-w-[1800px]">
-        <h1 className="mb-8 text-3xl font-bold text-black">כל המשמרות</h1>
+    <div dir="rtl" className="min-h-screen bg-background p-6">
+      <div className="mx-auto max-w-450">
+        <h1 className="mb-8 text-3xl font-bold text-foreground">כל המשמרות</h1>
 
-        {/* Search Input */}
-        <div className="mb-6 relative">
-          <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-          <Input
-            type="text"
-            placeholder="   חיפוש לפי שם עובד, אימייל, או שם כנס..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pr-10 border-gray-200 focus:border-orange-500 focus:ring-orange-500"
-          />
+        {/* Search Input + Status Filter */}
+        <div className="mb-6 flex items-center gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="   חיפוש לפי שם עובד או שם כנס..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pr-10 border-input focus:border-orange-500 focus:ring-orange-500"
+            />
+          </div>
+          <Select
+            dir="rtl"
+            value={statusFilter}
+            onValueChange={setStatusFilter}
+          >
+            <SelectTrigger className="w-44 border-input focus:border-orange-500 focus:ring-orange-500">
+              <SelectValue placeholder="סינון לפי סטטוס" />
+            </SelectTrigger>
+            <SelectContent dir="rtl">
+              <SelectItem value="all">הכל</SelectItem>
+              <SelectItem value="pending">ממתין</SelectItem>
+              <SelectItem value="approved">מאושר</SelectItem>
+              <SelectItem value="rejected">נדחה</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Shifts Table */}
-        <div className="rounded-lg border border-gray-200 overflow-x-auto">
-          <Table>
+        <div className="rounded-lg border border-border overflow-x-auto">
+          <Table className="table-fixed w-full">
             <TableHeader>
-              <TableRow className="bg-gray-50">
-                <TableHead className="text-right text-black font-semibold">
+              <TableRow className="bg-muted">
+                <TableHead className="text-right text-foreground font-semibold w-[140px]">
                   תאריך
                 </TableHead>
-                <TableHead className="text-right text-black font-semibold">
+                <TableHead className="text-right text-foreground font-semibold w-[200px]">
                   שם הכנס
                 </TableHead>
-                <TableHead className="text-right text-black font-semibold">
-                  מיקום הכנס
+                <TableHead className="text-right text-foreground font-semibold w-32.5">
+                  שם העובד
                 </TableHead>
-                <TableHead className="text-right text-black font-semibold">
-                  שם מלא של העובד
+                <TableHead className="text-right text-foreground font-semibold w-21.25">
+                  מספר עובד
                 </TableHead>
-                <TableHead className="text-right text-black font-semibold">
-                  מייל עובד
-                </TableHead>
-                <TableHead className="text-right text-black font-semibold">
-                  מנהל המשמרת
-                </TableHead>
-                <TableHead className="text-right text-black font-semibold">
+                <TableHead className="text-right text-foreground font-semibold w-17.5">
                   תפקיד
                 </TableHead>
-                <TableHead className="text-right text-black font-semibold">
-                  שעת התחלה
+                <TableHead className="text-right text-foreground font-semibold w-20">
+                  התחלה
                 </TableHead>
-                <TableHead className="text-right text-black font-semibold">
-                  שעת סיום
+                <TableHead className="text-right text-foreground font-semibold w-20">
+                  סיום
                 </TableHead>
-                <TableHead className="text-right text-black font-semibold">
-                  סה״כ שעות
+                <TableHead className="text-right text-foreground font-semibold w-18.75">
+                  {'סה"כ שעות'}
                 </TableHead>
-                <TableHead className="text-right text-black font-semibold">
+                <TableHead className="text-right text-foreground font-semibold w-18.75">
                   שכר שעתי
                 </TableHead>
-                <TableHead className="text-right text-black font-semibold">
+                <TableHead className="text-right text-foreground font-semibold w-16.25">
                   בונוס
                 </TableHead>
-                <TableHead className="text-right text-black font-semibold">
-                  החזר נסיעות
+                <TableHead className="text-right text-foreground font-semibold w-20">
+                  נסיעות
                 </TableHead>
-                <TableHead className="text-right text-black font-semibold">
-                  סה״כ משכורת
+                <TableHead className="text-right text-foreground font-semibold w-22.5">
+                  {'סה"כ '}
                 </TableHead>
-                <TableHead className="text-right text-black font-semibold">
-                  פעולות
+                <TableHead className="text-right text-foreground font-semibold w-18.75">
+                  סטטוס
+                </TableHead>
+                <TableHead className="text-right text-foreground font-semibold w-12.5">
+                  <span className="sr-only">פעולות</span>
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -253,208 +224,83 @@ export function AllShifts({ shifts: initialShifts }: AllShiftsProps) {
               {filteredShifts.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={15}
-                    className="text-center text-gray-500 py-8"
+                    colSpan={14}
+                    className="text-center text-muted-foreground py-8"
                   >
                     לא נמצאו משמרות
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredShifts.map((shift) => {
-                  const isEditing = editingId === shift.id;
-                  const displayShift =
-                    isEditing && editedShift ? editedShift : shift;
-                  const workerName =
-                    displayShift.worker_full_name ||
-                    displayShift.worker?.full_name ||
-                    "לא ידוע";
-                  const workerEmail =
-                    displayShift.worker_email ||
-                    displayShift.worker?.email ||
-                    "לא ידוע";
+                  const workerName = shift.worker?.full_name || "לא ידוע";
+                  const employeeNumber = shift.worker?.employee_number || "---";
 
                   return (
-                    <TableRow key={shift.id} className="hover:bg-gray-50">
-                      <TableCell className="text-right text-black">
-                        {new Date(displayShift.shift_date).toLocaleDateString(
-                          "he-IL"
-                        )}
+                    <TableRow
+                      key={shift.id}
+                      className="hover:bg-muted/50 cursor-pointer"
+                      onClick={() => handleRowClick(shift)}
+                    >
+                      <TableCell className="text-right text-foreground whitespace-nowrap">
+                        {formatILDate(shift.shift_date)}
                       </TableCell>
-                      <TableCell className="text-right text-black">
-                        {displayShift.event_name}
+                      <TableCell className="text-right text-foreground">
+                        <TruncatedTooltip text={shift.event_name} />
                       </TableCell>
-                      <TableCell className="text-right text-gray-700">
-                        {displayShift.location}
+                      <TableCell className="text-right text-foreground">
+                        <span className="block truncate max-w-full">
+                          {workerName}
+                        </span>
                       </TableCell>
-                      <TableCell className="text-right font-medium text-black">
-                        {workerName}
-                      </TableCell>
-                      <TableCell className="text-right text-gray-700">
-                        {workerEmail}
-                      </TableCell>
-                      <TableCell className="text-right text-gray-700">
-                        {displayShift.manager}
+                      <TableCell className="text-right text-muted-foreground">
+                        {employeeNumber}
                       </TableCell>
                       <TableCell className="text-right">
-                        {isEditing ? (
-                          <Select
-                            value={displayShift.role}
-                            onValueChange={(value) =>
-                              handleFieldChange("role", value)
-                            }
-                          >
-                            <SelectTrigger className="w-28 border-orange-300 focus:border-orange-500 focus:ring-orange-500">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent dir="rtl">
-                              <SelectItem value="worker">עובד</SelectItem>
-                              <SelectItem value="manager">מנהל</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        ) : (
-                          <span className="inline-flex items-center rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-orange-800">
-                            {roleLabels[displayShift.role]}
-                          </span>
-                        )}
+                        <span className="inline-flex items-center rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-orange-800">
+                          {roleLabels[shift.role]}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right text-foreground whitespace-nowrap">
+                        {shift.start_time.slice(0, 5)}
+                      </TableCell>
+                      <TableCell className="text-right text-foreground whitespace-nowrap">
+                        {shift.end_time.slice(0, 5)}
+                      </TableCell>
+                      <TableCell className="text-right text-foreground font-medium">
+                        {shift.total_hours.toFixed(2)}
+                      </TableCell>
+                      <TableCell className="text-right text-foreground whitespace-nowrap">
+                        {"₪"}
+                        {shift.hourly_rate}
+                      </TableCell>
+                      <TableCell className="text-right text-foreground whitespace-nowrap">
+                        {"₪"}
+                        {shift.wage_bonus}
+                      </TableCell>
+                      <TableCell className="text-right text-foreground whitespace-nowrap">
+                        {"₪"}
+                        {shift.travel_amount}
+                      </TableCell>
+                      <TableCell className="text-right text-foreground font-bold whitespace-nowrap">
+                        {"₪"}
+                        {shift.shift_pay_total.toFixed(2)}
                       </TableCell>
                       <TableCell className="text-right">
-                        {isEditing ? (
-                          <Input
-                            type="time"
-                            value={displayShift.start_time}
-                            onChange={(e) =>
-                              handleFieldChange("start_time", e.target.value)
-                            }
-                            className="w-28 text-right border-orange-300 focus:border-orange-500 focus:ring-orange-500"
-                          />
-                        ) : (
-                          <span className="text-black">
-                            {displayShift.start_time}
-                          </span>
-                        )}
+                        <span
+                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusStyles[shift.status]}`}
+                        >
+                          {statusLabels[shift.status]}
+                        </span>
                       </TableCell>
                       <TableCell className="text-right">
-                        {isEditing ? (
-                          <Input
-                            type="time"
-                            value={displayShift.end_time}
-                            onChange={(e) =>
-                              handleFieldChange("end_time", e.target.value)
-                            }
-                            className="w-28 text-right border-orange-300 focus:border-orange-500 focus:ring-orange-500"
-                          />
-                        ) : (
-                          <span className="text-black">
-                            {displayShift.end_time}
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right text-black font-medium">
-                        {displayShift.total_hours.toFixed(2)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {isEditing ? (
-                          <Input
-                            type="number"
-                            value={displayShift.hourly_rate}
-                            onChange={(e) =>
-                              handleFieldChange(
-                                "hourly_rate",
-                                Number(e.target.value)
-                              )
-                            }
-                            className="w-24 text-right border-orange-300 focus:border-orange-500 focus:ring-orange-500"
-                          />
-                        ) : (
-                          <span className="text-black">
-                            ₪{displayShift.hourly_rate}
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {isEditing ? (
-                          <Input
-                            type="number"
-                            value={displayShift.wage_bonus}
-                            onChange={(e) =>
-                              handleFieldChange(
-                                "wage_bonus",
-                                Number(e.target.value)
-                              )
-                            }
-                            className="w-24 text-right border-orange-300 focus:border-orange-500 focus:ring-orange-500"
-                          />
-                        ) : (
-                          <span className="text-black">
-                            ₪{displayShift.wage_bonus}
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {isEditing ? (
-                          <Input
-                            type="number"
-                            value={displayShift.travel_amount}
-                            onChange={(e) =>
-                              handleFieldChange(
-                                "travel_amount",
-                                Number(e.target.value)
-                              )
-                            }
-                            className="w-24 text-right border-orange-300 focus:border-orange-500 focus:ring-orange-500"
-                          />
-                        ) : (
-                          <span className="text-black">
-                            ₪{displayShift.travel_amount}
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right text-black font-bold">
-                        ₪{displayShift.shift_pay_total.toFixed(2)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center gap-2 justify-end">
-                          {isEditing ? (
-                            <>
-                              <Button
-                                size="sm"
-                                onClick={handleSave}
-                                className="bg-orange-500 hover:bg-orange-600 text-white"
-                              >
-                                <Save className="h-4 w-4 ml-1" />
-                                שמור
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={handleCancel}
-                              >
-                                ביטול
-                              </Button>
-                            </>
-                          ) : (
-                            <>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleEdit(shift)}
-                                className="border-orange-500 text-orange-500 hover:bg-orange-50"
-                              >
-                                <Edit2 className="h-4 w-4 ml-1" />
-                                ערוך
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleDeleteClick(shift.id)}
-                                className="border-red-500 text-red-500 hover:bg-red-50"
-                              >
-                                <Trash2 className="h-4 w-4 ml-1" />
-                                מחק
-                              </Button>
-                            </>
-                          )}
-                        </div>
+                        <button
+                          type="button"
+                          onClick={(e) => handleDeleteClick(e, shift.id)}
+                          className="inline-flex items-center justify-center rounded-md border border-red-500 text-red-500 hover:bg-red-50 h-8 w-8"
+                          aria-label="מחק"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
                       </TableCell>
                     </TableRow>
                   );
@@ -465,13 +311,21 @@ export function AllShifts({ shifts: initialShifts }: AllShiftsProps) {
         </div>
       </div>
 
+      {/* Shift Detail / Edit Panel */}
+      <ShiftDetailPanel
+        shift={selectedShift}
+        open={detailPanelOpen}
+        onOpenChange={setDetailPanelOpen}
+        onSave={handleShiftSave}
+      />
+
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent dir="rtl">
           <AlertDialogHeader>
-            <AlertDialogTitle>האם אתה בטוח?</AlertDialogTitle>
+            <AlertDialogTitle>{"האם אתה בטוח?"}</AlertDialogTitle>
             <AlertDialogDescription>
-              פעולה זו תמחק את המשמרת לצמיתות ולא ניתן לשחזר אותה.
+              {"פעולה זו תמחק את המשמרת לצמיתות ולא ניתן לשחזר אותה."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -482,7 +336,7 @@ export function AllShifts({ shifts: initialShifts }: AllShiftsProps) {
               onClick={handleDeleteConfirm}
               className="bg-red-500 hover:bg-red-600"
             >
-              כן, מחק
+              {"כן, מחק"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

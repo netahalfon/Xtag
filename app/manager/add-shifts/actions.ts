@@ -34,7 +34,7 @@ const calculateShiftPayTotal = (
   totalHours: number,
   hourlyRate: number,
   wageBonus: number,
-  travelAmount: number
+  travelAmount: number,
 ): number => {
   if (totalHours <= 8) {
     return totalHours * hourlyRate + wageBonus + travelAmount;
@@ -71,7 +71,7 @@ export async function createShiftsAction(input: CreateShiftsInput) {
   }
 
   const validWorkers = input.assignedWorkers.filter(
-    (aw) => aw.workerId && aw.startTime && aw.endTime && aw.role
+    (aw) => aw.workerId && aw.startTime && aw.endTime && aw.role,
   );
 
   if (validWorkers.length === 0) {
@@ -95,7 +95,7 @@ export async function createShiftsAction(input: CreateShiftsInput) {
         salary_regular: Number(u.salary_regular ?? 0),
         salary_manager: Number(u.salary_manager ?? 0),
       },
-    ])
+    ]),
   );
 
   // 2) Build shift rows
@@ -115,7 +115,7 @@ export async function createShiftsAction(input: CreateShiftsInput) {
 
     if (hourlyRate < 0) {
       throw new Error(
-        `Missing/invalid hourly rate for worker ${aw.workerId} (role: ${aw.role})`
+        `Missing/invalid hourly rate for worker ${aw.workerId} (role: ${aw.role})`,
       );
     }
 
@@ -129,8 +129,8 @@ export async function createShiftsAction(input: CreateShiftsInput) {
         totalHours,
         hourlyRate,
         wageBonus,
-        travelAmount
-      ).toFixed(2)
+        travelAmount,
+      ).toFixed(2),
     );
 
     return {
@@ -151,7 +151,7 @@ export async function createShiftsAction(input: CreateShiftsInput) {
       travel_amount: travelAmount,
       shift_pay_total: shiftPayTotal,
 
-      status: "draft",
+      status: "pending",
     };
   });
 
