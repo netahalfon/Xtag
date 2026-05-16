@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { sendEmail } from "@/lib/email/mailer";
+import { shiftApproved, shiftRejected } from "@/lib/email/templates";
 import type { Shift } from "@/types/shift";
 
 async function assertAdmin() {
@@ -42,6 +44,12 @@ export async function updateShift(updated: Shift) {
 
   const supabase = await assertAdmin();
 
+  const { data: existing } = await supabase
+    .from("shifts")
+    .select("status, worker:users!shifts_worker_id_fkey(email, full_name)")
+    .eq("id", updated.id)
+    .single();
+
   const { error } = await supabase
     .from("shifts")
     .update({
@@ -74,6 +82,23 @@ export async function updateShift(updated: Shift) {
     shiftId: updated.id,
   });
 
+  try {
+    const prevStatus = existing?.status;
+    const workerEmail = (existing as any)?.worker?.email as string | undefined;
+
+    if (workerEmail && prevStatus && prevStatus !== updated.status) {
+      if (updated.status === "approved") {
+        const { subject, text } = shiftApproved(updated.shift_date);
+        await sendEmail(workerEmail, subject, text);
+      } else if (updated.status === "rejected") {
+        const { subject, text } = shiftRejected(updated.shift_date);
+        await sendEmail(workerEmail, subject, text);
+      }
+    }
+  } catch (mailErr) {
+    console.error("[updateShift] notification failed:", mailErr);
+  }
+
   return { ok: true };
 }
 
@@ -82,6 +107,14 @@ export async function deleteShift(shiftId: string) {
   console.log("🟡 deleteShift: START", { shiftId });
 
   const supabase = await assertAdmin();
+
+  const { data: existing } = await supabase
+    .from("shifts")
+    .select(
+      "shift_date, worker:users!shifts_worker_id_fkey(email, full_name)",
+    )
+    .eq("id", shiftId)
+    .single();
 
   const { error } = await supabase.from("shifts").delete().eq("id", shiftId);
 
@@ -94,6 +127,17 @@ export async function deleteShift(shiftId: string) {
   }
 
   console.log("✅ deleteShift: SUCCESS", { shiftId });
+
+  try {
+    const workerEmail = (existing as any)?.worker?.email as string | undefined;
+    const shiftDate = existing?.shift_date as string | undefined;
+    if (workerEmail && shiftDate) {
+      const { subject, text } = shiftRejected(shiftDate);
+      await sendEmail(workerEmail, subject, text);
+    }
+  } catch (mailErr) {
+    console.error("[deleteShift] notification failed:", mailErr);
+  }
 
   return { ok: true };
 }

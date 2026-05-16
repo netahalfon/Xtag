@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { notifyTamuzNewEmployee } from "./actions";
 const bankNames = [
   'בנק יהב לעובדי המדינה בע"מ (מספר בנק - 4)',
   'בנק לאומי לישראל בע"מ (מספר בנק - 10)',
@@ -288,6 +289,16 @@ export default function SignupPage() {
       });
 
       if (error) throw error;
+
+      try {
+        await notifyTamuzNewEmployee({
+          full_name: fullName,
+          id_number: cleanedId,
+          email: email.trim(),
+        });
+      } catch (notifyErr) {
+        console.error("notifyTamuzNewEmployee failed:", notifyErr);
+      }
 
       alert("בדקי את האימייל כדי לאשר את החשבון!");
       router.push("/auth/login");

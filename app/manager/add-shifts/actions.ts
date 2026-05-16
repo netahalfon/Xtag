@@ -1,6 +1,11 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { sendEmail } from "@/lib/email/mailer";
+import {
+  shiftSubmittedToWorkers,
+  shiftSubmittedToAdmin,
+} from "@/lib/email/templates";
 
 type AssignedWorker = {
   workerId: string;
@@ -157,6 +162,73 @@ export async function createShiftsAction(input: CreateShiftsInput) {
 
   const { error: insertErr } = await supabase.from("shifts").insert(rows);
   if (insertErr) throw new Error(insertErr.message);
+
+  // Fire-and-forget notifications. Mail failures must not break the action.
+  try {
+    const { data: submitter } = await supabase
+      .from("users")
+      .select("full_name, email")
+      .eq("id", user.id)
+      .single();
+
+    const submitterName =
+      submitter?.full_name?.trim() || submitter?.email || "משתמש";
+
+    const workerNameById = new Map(
+      ((
+        await supabase
+          .from("users")
+          .select("id, full_name, email")
+          .in("id", workerIds)
+      ).data ?? []).map((u: any) => [u.id, u]),
+    );
+
+    const shiftLines = rows.map((r) => {
+      const w = workerNameById.get(r.worker_id);
+      return {
+        worker_name: w?.full_name?.trim() || w?.email || r.worker_id,
+        event_name: r.event_name,
+        shift_date: r.shift_date,
+        start_time: r.start_time,
+        end_time: r.end_time,
+        total_hours: r.total_hours,
+        role: r.role,
+        location: r.location,
+        notes: null,
+        status: r.status,
+      };
+    });
+
+    // Task #2 — notify all employees
+    const { data: allUsers } = await supabase
+      .from("users")
+      .select("email")
+      .in("role", ["worker", "manager", "admin"]);
+
+    const allEmails = (allUsers ?? [])
+      .map((u: any) => u.email)
+      .filter((e: string | null): e is string => !!e && e.length > 0);
+
+    if (allEmails.length > 0) {
+      const { subject, text } = shiftSubmittedToWorkers(
+        submitterName,
+        shiftLines,
+      );
+      await sendEmail(allEmails, subject, text);
+    }
+
+    // Task #3 — notify system admin
+    const adminEmail = process.env.ADMIN_EMAIL;
+    if (adminEmail) {
+      const { subject, text } = shiftSubmittedToAdmin(
+        submitterName,
+        shiftLines,
+      );
+      await sendEmail(adminEmail, subject, text);
+    }
+  } catch (mailErr) {
+    console.error("[createShiftsAction] notification failed:", mailErr);
+  }
 
   return { ok: true, inserted: rows.length };
 }
