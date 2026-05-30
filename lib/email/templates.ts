@@ -146,6 +146,52 @@ export function shiftRejected(shiftDate: string): {
   };
 }
 
+// Inquiries — new submission to admin
+export function inquirySubmittedToAdmin(args: {
+  workerName: string;
+  phone: string | null;
+  email: string;
+  subject: string;
+  content: string;
+}): { subject: string; text: string } {
+  const lines = [
+    `התקבלה פנייה חדשה מ-${args.workerName}.`,
+    "",
+    "פרטי הפונה:",
+    `שם: ${args.workerName}`,
+    `מייל: ${args.email}`,
+  ];
+  if (args.phone?.trim()) {
+    lines.push(`טלפון: ${args.phone}`);
+  }
+  lines.push(
+    "",
+    `נושא הפנייה: ${args.subject}`,
+    "",
+    "תוכן הפנייה:",
+    args.content,
+  );
+  return {
+    subject: `Xtag - פנייה חדשה מ-${args.workerName}`,
+    text: lines.join("\n"),
+  };
+}
+
+// Inquiries — admin response to worker
+export function inquiryAnsweredToWorker(args: {
+  subject: string;
+  response: string;
+}): { subject: string; text: string } {
+  return {
+    subject: "Xtag - תשובה לפנייתך",
+    text: [
+      `התקבלה תשובה לפנייתך בנושא "${args.subject}":`,
+      "",
+      args.response,
+    ].join("\n"),
+  };
+}
+
 // Task #6
 export function newEmployeeRegistered(employee: {
   full_name: string;

@@ -11,6 +11,7 @@ import LogoutModal from "./logout-modal";
 
 const navItemsWorker = [
   { name: "המשכורת שלי", href: "/worker/my-salary" },
+  { name: "פניות", href: "/worker/inquiries" },
   { name: "פרופיל", href: "/worker/settings" },
 ];
 
@@ -23,6 +24,7 @@ const navItemsAdmin = [
   ...navItemsManager,
   { name: "משמרות", href: "/admin/all-shifts" },
   { name: "עובדים", href: "/admin/all-workers" },
+  { name: "ניהול פניות", href: "/admin/inquiries" },
   { name: "טפסי 101", href: "/admin/forms101" },
   { name: "משכורות", href: "/admin/payroll" },
 ];
