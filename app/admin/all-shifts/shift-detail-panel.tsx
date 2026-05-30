@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -395,6 +396,27 @@ export function ShiftDetailPanel({
                   )}
                 </div>
               </div>
+
+              <hr className="border-gray-400" />
+
+              {/* Notes */}
+              <h3 className="text-sm font-semibold text-foreground">הערות</h3>
+
+              {isEditing ? (
+                <Textarea
+                  rows={3}
+                  value={editedShift.notes ?? ""}
+                  onChange={(e) => handleFieldChange("notes", e.target.value)}
+                  placeholder="הערה למשמרת זו"
+                  className="border-orange-300 focus:border-orange-500 focus:ring-orange-500 resize-none"
+                />
+              ) : (
+                <p className="text-sm text-foreground whitespace-pre-wrap">
+                  {displayShift.notes?.trim()
+                    ? displayShift.notes
+                    : "אין הערה"}
+                </p>
+              )}
 
               <hr className="border-gray-400" />
 

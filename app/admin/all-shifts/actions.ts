@@ -66,6 +66,7 @@ export async function updateShift(updated: Shift) {
       travel_amount: updated.travel_amount,
       shift_pay_total: updated.shift_pay_total,
       status: updated.status,
+      notes: updated.notes?.trim() ? updated.notes : null,
       updated_at: new Date().toISOString(),
     })
     .eq("id", updated.id);

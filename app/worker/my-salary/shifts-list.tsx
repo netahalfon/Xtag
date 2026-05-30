@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import dynamic from "next/dynamic";
 import { Card } from "@/components/ui/card";
 import {
   Select,
@@ -9,6 +10,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+const TruncatedTooltip = dynamic(
+  () =>
+    import("@/components/truncated-tooltip").then((m) => m.TruncatedTooltip),
+  { ssr: false },
+);
 
 interface Shift {
   id: string;
@@ -24,6 +31,7 @@ interface Shift {
   travel_amount?: number;
   shift_pay_total?: number;
   status: "pending" | "approved" | "rejected";
+  notes?: string | null;
 }
 
 interface ShiftsListProps {
@@ -106,7 +114,9 @@ export function ShiftsList({ shifts, title = "המשמרות שלי" }: ShiftsLi
       <div className="mx-auto max-w-7xl">
         {/* Header with filters */}
         <div className="mb-8">
-          <h1 className="mb-6 text-3xl font-bold text-black">המשמרות שלי</h1>
+          <h1 className="mb-6 text-2xl md:text-3xl font-bold text-black">
+            המשמרות שלי
+          </h1>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-md">
             {/* Month selector */}
             <div>
@@ -155,8 +165,104 @@ export function ShiftsList({ shifts, title = "המשמרות שלי" }: ShiftsLi
         </div>
       </div>
 
-      {/* Shifts list */}
-      <div className="mb-8 overflow-x-auto">
+      {/* Empty state (both layouts) */}
+      {filteredShifts.length === 0 && (
+        <Card className="mb-8 p-8 text-center border-orange-200 md:hidden">
+          <p className="text-black/60">לא נמצאו משמרות לתקופה זו</p>
+        </Card>
+      )}
+
+      {/* Mobile cards (visible < md) */}
+      {filteredShifts.length > 0 && (
+        <div className="mb-8 space-y-3 md:hidden">
+          {filteredShifts.map((shift) => (
+            <Card
+              key={shift.id}
+              className="border-orange-200 p-4 space-y-3 shadow-sm"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-base font-bold text-black">
+                  {formatDate(shift.shift_date)}
+                </span>
+                <span
+                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusStyles[shift.status]}`}
+                >
+                  {statusLabels[shift.status]}
+                </span>
+              </div>
+
+              <div>
+                <p className="font-semibold text-black">{shift.event_name}</p>
+                <p className="text-sm text-black/60">
+                  {shift.location}
+                  {shift.manager ? ` • ${shift.manager}` : ""}
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between rounded-md bg-orange-50 px-3 py-2 text-sm">
+                <span className="text-black">
+                  {shift.start_time || "-"} - {shift.end_time || "-"}
+                </span>
+                <span className="font-semibold text-black">
+                  {shift.total_hours ? `${shift.total_hours.toFixed(1)} שעות` : "-"}
+                </span>
+              </div>
+
+              {shift.notes?.trim() && (
+                <div className="text-sm text-black/80">
+                  <span className="font-semibold">הערה: </span>
+                  <span className="whitespace-pre-wrap">{shift.notes}</span>
+                </div>
+              )}
+
+              <div className="grid grid-cols-3 gap-2 text-xs text-black/70">
+                <div className="text-center">
+                  <div className="text-black/50">תעריף</div>
+                  <div className="font-medium text-black">
+                    {shift.hourly_rate ? `₪${shift.hourly_rate}` : "-"}
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-black/50">בונוס</div>
+                  <div className="font-medium text-orange-600">
+                    {shift.wage_bonus && shift.wage_bonus > 0
+                      ? `₪${shift.wage_bonus}`
+                      : "-"}
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-black/50">נסיעות</div>
+                  <div className="font-medium text-black">
+                    {shift.travel_amount ? `₪${shift.travel_amount}` : "-"}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between border-t border-orange-100 pt-2">
+                <span className="text-sm font-semibold text-black">
+                  סה"כ למשמרת
+                </span>
+                <span
+                  className={`text-base font-bold ${
+                    shift.status === "approved"
+                      ? "text-orange-600"
+                      : "text-gray-400"
+                  }`}
+                >
+                  {shift.status === "rejected"
+                    ? "-"
+                    : shift.shift_pay_total
+                      ? `₪${shift.shift_pay_total}`
+                      : "₪0"}
+                </span>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Desktop table (visible ≥ md) */}
+      <div className="mb-8 overflow-x-auto hidden md:block">
         {filteredShifts.length === 0 ? (
           <Card className="p-8 text-center border-orange-200">
             <p className="text-black/60">לא נמצאו משמרות לתקופה זו</p>
@@ -180,6 +286,9 @@ export function ShiftsList({ shifts, title = "המשמרות שלי" }: ShiftsLi
                   </th>
                   <th className="p-3 text-right text-sm font-bold text-black">
                     מנהל
+                  </th>
+                  <th className="p-3 text-right text-sm font-bold text-black">
+                    הערות
                   </th>
                   <th className="p-3 text-right text-sm font-bold text-black">
                     התחלה
@@ -229,6 +338,13 @@ export function ShiftsList({ shifts, title = "המשמרות שלי" }: ShiftsLi
                     </td>
                     <td className="p-3 text-sm text-black">{shift.location}</td>
                     <td className="p-3 text-sm text-black">{shift.manager}</td>
+                    <td className="p-3 text-sm text-black max-w-40">
+                      {shift.notes?.trim() ? (
+                        <TruncatedTooltip text={shift.notes} />
+                      ) : (
+                        <span className="text-black/40">—</span>
+                      )}
+                    </td>
                     <td className="p-3 text-sm text-black">
                       {shift.start_time || "-"}
                     </td>
@@ -273,14 +389,16 @@ export function ShiftsList({ shifts, title = "המשמרות שלי" }: ShiftsLi
       </div>
 
       {/* Total salary card */}
-      <Card className="border-orange-500 bg-gradient-to-br from-orange-50 to-white p-6 shadow-lg">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-black">סה"כ משכורת</h2>
-          <p className="text-3xl font-bold text-orange-500">
+      <Card className="border-orange-500 bg-gradient-to-br from-orange-50 to-white p-4 md:p-6 shadow-lg">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-lg md:text-2xl font-bold text-black">
+            סה"כ משכורת
+          </h2>
+          <p className="text-2xl md:text-3xl font-bold text-orange-500 whitespace-nowrap">
             ₪{totalSalary.toLocaleString("he-IL")}
           </p>
         </div>
-        <p className="mt-2 text-sm text-black/60">
+        <p className="mt-2 text-xs md:text-sm text-black/60">
           {filteredShifts.length} משמרות ב-{monthNames[selectedMonth]}{" "}
           {selectedYear}
         </p>

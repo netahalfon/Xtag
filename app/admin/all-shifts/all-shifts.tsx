@@ -215,6 +215,9 @@ export function AllShifts({ shifts: initialShifts }: AllShiftsProps) {
                 <TableHead className="text-right text-foreground font-semibold w-18.75">
                   סטטוס
                 </TableHead>
+                <TableHead className="text-right text-foreground font-semibold w-40">
+                  הערות
+                </TableHead>
                 <TableHead className="text-right text-foreground font-semibold w-12.5">
                   <span className="sr-only">פעולות</span>
                 </TableHead>
@@ -224,7 +227,7 @@ export function AllShifts({ shifts: initialShifts }: AllShiftsProps) {
               {filteredShifts.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={14}
+                    colSpan={15}
                     className="text-center text-muted-foreground py-8"
                   >
                     לא נמצאו משמרות
@@ -291,6 +294,13 @@ export function AllShifts({ shifts: initialShifts }: AllShiftsProps) {
                         >
                           {statusLabels[shift.status]}
                         </span>
+                      </TableCell>
+                      <TableCell className="text-right text-foreground">
+                        {shift.notes?.trim() ? (
+                          <TruncatedTooltip text={shift.notes} />
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
                       </TableCell>
                       <TableCell className="text-right">
                         <button

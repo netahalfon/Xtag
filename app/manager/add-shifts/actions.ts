@@ -12,6 +12,7 @@ type AssignedWorker = {
   startTime: string; // "HH:MM"
   endTime: string; // "HH:MM"
   role: "דייל" | "מנהל" | "";
+  notes: string;
 };
 
 type CreateShiftsInput = {
@@ -156,6 +157,7 @@ export async function createShiftsAction(input: CreateShiftsInput) {
       travel_amount: travelAmount,
       shift_pay_total: shiftPayTotal,
 
+      notes: aw.notes?.trim() || null,
       status: "pending",
     };
   });
@@ -194,7 +196,7 @@ export async function createShiftsAction(input: CreateShiftsInput) {
         total_hours: r.total_hours,
         role: r.role,
         location: r.location,
-        notes: null,
+        notes: r.notes,
         status: r.status,
         shift_pay_total: r.shift_pay_total,
       };
@@ -233,7 +235,7 @@ export async function createShiftsAction(input: CreateShiftsInput) {
             start_time: r.start_time,
             end_time: r.end_time,
             total_hours: r.total_hours,
-            notes: null,
+            notes: r.notes,
             status: r.status,
             shift_pay_total: r.shift_pay_total,
           };

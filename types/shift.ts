@@ -14,6 +14,7 @@ export type Shift = {
   travel_amount: number;
   shift_pay_total: number;
   status: "pending" | "approved" | "rejected";
+  notes: string | null;
   created_at: string;
   updated_at: string;
 

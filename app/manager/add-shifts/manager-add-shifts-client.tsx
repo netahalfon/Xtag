@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -42,6 +43,7 @@ type AssignedWorker = {
   startTime: string;
   endTime: string;
   role: "דייל" | "מנהל" | "";
+  notes: string;
 };
 
 type Props = {
@@ -80,7 +82,7 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
   const [eventName, setEventName] = useState("");
   const [teamManager, setTeamManager] = useState("");
   const [assignedWorkers, setAssignedWorkers] = useState<AssignedWorker[]>([
-    { workerId: "", startTime: "", endTime: "", role: "" },
+    { workerId: "", startTime: "", endTime: "", role: "", notes: "" },
   ]);
   const [workerErrors, setWorkerErrors] = useState<Record<number, string[]>>(
     {},
@@ -89,7 +91,7 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
   const addWorker = () => {
     setAssignedWorkers([
       ...assignedWorkers,
-      { workerId: "", startTime: "", endTime: "", role: "" },
+      { workerId: "", startTime: "", endTime: "", role: "", notes: "" },
     ]);
   };
 
@@ -132,7 +134,7 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
     setEventName("");
     setTeamManager("");
     setAssignedWorkers([
-      { workerId: "", startTime: "", endTime: "", role: "" },
+      { workerId: "", startTime: "", endTime: "", role: "", notes: "" },
     ]);
     setWorkerErrors({});
   };
@@ -458,6 +460,22 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
                           <SelectItem value="מנהל">מנהל</SelectItem>
                         </SelectContent>
                       </Select>
+                    </div>
+
+                    <div className="space-y-2 md:col-span-2 lg:col-span-4">
+                      <Label className="text-slate-700 dark:text-slate-300">
+                        הערות (אופציונלי)
+                      </Label>
+                      <Textarea
+                        rows={2}
+                        value={assignedWorker.notes}
+                        onChange={(e) =>
+                          updateWorker(index, "notes", e.target.value)
+                        }
+                        placeholder="הערה לעובד הזה לגבי המשמרת"
+                        className="border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 resize-none"
+                        disabled={isSubmitting}
+                      />
                     </div>
                   </div>
 
