@@ -11,7 +11,10 @@ type ShiftLine = {
   location: string;
   notes?: string | null;
   status: string;
+  shift_pay_total?: number | null;
 };
+
+const formatIls = (amount: number) => `₪${amount.toFixed(2)}`;
 
 const roleHebrew = (role: string) =>
   role === "manager" ? "מנהל" : role === "worker" ? "דייל" : role;
@@ -30,7 +33,7 @@ const statusHebrew = (status: string) => {
 };
 
 function formatShiftBlock(s: ShiftLine): string {
-  return [
+  const lines = [
     `שם האירוע: ${s.event_name ?? "—"}`,
     `תאריך: ${s.shift_date}`,
     `שעות: ${s.start_time}–${s.end_time} (סה"כ ${s.total_hours})`,
@@ -38,7 +41,11 @@ function formatShiftBlock(s: ShiftLine): string {
     `מיקום: ${s.location}`,
     `הערות: ${s.notes?.trim() ? s.notes : "—"}`,
     `סטטוס: ${statusHebrew(s.status)}`,
-  ].join("\n");
+  ];
+  if (s.shift_pay_total != null) {
+    lines.push(`שכר משמרת: ${formatIls(s.shift_pay_total)}`);
+  }
+  return lines.join("\n");
 }
 
 // Task #2
@@ -46,29 +53,74 @@ export function shiftSubmittedToWorkers(
   submitterName: string,
   shifts: ShiftLine[],
 ): { subject: string; text: string } {
-  const subject = "New Shift Pending Approval";
+  const subject = "Xtag - משמרת חדשה ממתינה לאישור";
   const header = `נשלחה משמרת חדשה על ידי ${submitterName}.`;
   const body = shifts.map(formatShiftBlock).join("\n\n----------\n\n");
   return { subject, text: `${header}\n\nפרטי המשמרת:\n\n${body}\n` };
 }
 
+type AdminWorkerLine = {
+  full_name: string;
+  email: string;
+  employee_number: string | null;
+  role: "worker" | "manager" | string;
+  start_time: string;
+  end_time: string;
+  total_hours: number;
+  notes?: string | null;
+  status: string;
+  shift_pay_total?: number | null;
+};
+
+export type AdminShiftPayload = {
+  event_name: string | null;
+  shift_date: string;
+  location: string;
+  team_manager: string;
+  workers: AdminWorkerLine[];
+};
+
+function joinNonEmptyLines(pairs: Array<[string, string | null | undefined]>) {
+  return pairs
+    .filter(([, value]) => value != null && String(value).trim() !== "")
+    .map(([label, value]) => `${label}: ${value}`)
+    .join("\n");
+}
+
 // Task #3
 export function shiftSubmittedToAdmin(
   submitterName: string,
-  shifts: ShiftLine[],
+  payload: AdminShiftPayload,
 ): { subject: string; text: string } {
-  const subject = "New Shifts Waiting for Approval";
+  const subject = "משמרות חדשות ממתינות לאישור";
   const header = `נשלחו משמרות חדשות לאישור על ידי ${submitterName}.`;
-  const lines = shifts.map(
-    (s, i) =>
-      `#${i + 1} ${s.worker_name} — ${s.shift_date} ${s.start_time}–${s.end_time} (${roleHebrew(
-        s.role,
-      )}) — ${statusHebrew(s.status)}`,
-  );
-  const detailed = shifts.map(formatShiftBlock).join("\n\n----------\n\n");
+
+  const eventBlock = joinNonEmptyLines([
+    ["שם האירוע", payload.event_name],
+    ["תאריך", payload.shift_date],
+    ["מיקום", payload.location],
+    ["שם מנהל הצוות", payload.team_manager],
+  ]);
+
+  const workerBlocks = payload.workers
+    .map((w, i) => {
+      const body = joinNonEmptyLines([
+        ["שם", w.full_name],
+        ["מייל", w.email],
+        ["מספר עובד", w.employee_number],
+        ["תפקיד", roleHebrew(w.role)],
+        ["שעות עבודה", `${w.start_time}–${w.end_time} (סה"כ ${w.total_hours})`],
+        ["שכר משמרת", w.shift_pay_total != null ? formatIls(w.shift_pay_total) : null],
+        ["הערה", w.notes],
+        ["סטטוס", statusHebrew(w.status)],
+      ]);
+      return `#${i + 1}\n${body}`;
+    })
+    .join("\n\n----------\n\n");
+
   return {
     subject,
-    text: `${header}\n\nסיכום:\n${lines.join("\n")}\n\nפירוט:\n\n${detailed}\n`,
+    text: `${header}\n\nפרטי המשמרת:\n${eventBlock}\n\nעובדים:\n\n${workerBlocks}\n`,
   };
 }
 
@@ -78,7 +130,7 @@ export function shiftApproved(shiftDate: string): {
   text: string;
 } {
   return {
-    subject: "Your Shift Was Approved",
+    subject: "Xtag - המשמרת שלך אושרה",
     text: `המשמרת שלך לתאריך ${shiftDate} אושרה בהצלחה.`,
   };
 }
@@ -89,7 +141,7 @@ export function shiftRejected(shiftDate: string): {
   text: string;
 } {
   return {
-    subject: "Your Shift Was Rejected",
+    subject: "Xtag - המשמרת שלך נדחתה",
     text: `המשמרת שלך לתאריך ${shiftDate} נדחתה על ידי מנהל המערכת.`,
   };
 }
@@ -101,7 +153,7 @@ export function newEmployeeRegistered(employee: {
   email: string;
 }): { subject: string; text: string } {
   return {
-    subject: "New Employee Registered",
+    subject: "עובד חדש נרשם",
     text: [
       "עובד חדש נרשם בהצלחה.",
       "",

@@ -178,7 +178,7 @@ export async function createShiftsAction(input: CreateShiftsInput) {
       ((
         await supabase
           .from("users")
-          .select("id, full_name, email")
+          .select("id, full_name, email, employee_number")
           .in("id", workerIds)
       ).data ?? []).map((u: any) => [u.id, u]),
     );
@@ -196,33 +196,52 @@ export async function createShiftsAction(input: CreateShiftsInput) {
         location: r.location,
         notes: null,
         status: r.status,
+        shift_pay_total: r.shift_pay_total,
       };
     });
 
-    // Task #2 — notify all employees
-    const { data: allUsers } = await supabase
-      .from("users")
-      .select("email")
-      .in("role", ["worker", "manager", "admin"]);
+    // Task #2 — notify each assigned worker with only their own shifts
+    const linesByWorker = new Map<string, typeof shiftLines>();
+    rows.forEach((r, idx) => {
+      const existing = linesByWorker.get(r.worker_id) ?? [];
+      existing.push(shiftLines[idx]);
+      linesByWorker.set(r.worker_id, existing);
+    });
 
-    const allEmails = (allUsers ?? [])
-      .map((u: any) => u.email)
-      .filter((e: string | null): e is string => !!e && e.length > 0);
-
-    if (allEmails.length > 0) {
-      const { subject, text } = shiftSubmittedToWorkers(
-        submitterName,
-        shiftLines,
-      );
-      await sendEmail(allEmails, subject, text);
+    for (const [workerId, lines] of linesByWorker) {
+      const workerEmail = workerNameById.get(workerId)?.email;
+      if (!workerEmail) continue;
+      const { subject, text } = shiftSubmittedToWorkers(submitterName, lines);
+      await sendEmail(workerEmail, subject, text);
     }
 
     // Task #3 — notify system admin
     const adminEmail = process.env.ADMIN_EMAIL;
     if (adminEmail) {
+      const adminPayload = {
+        event_name: input.eventName || null,
+        shift_date: input.eventDate,
+        location: input.eventLocation,
+        team_manager: input.teamManager,
+        workers: rows.map((r) => {
+          const w = workerNameById.get(r.worker_id);
+          return {
+            full_name: w?.full_name?.trim() || "",
+            email: w?.email || "",
+            employee_number: w?.employee_number ?? null,
+            role: r.role,
+            start_time: r.start_time,
+            end_time: r.end_time,
+            total_hours: r.total_hours,
+            notes: null,
+            status: r.status,
+            shift_pay_total: r.shift_pay_total,
+          };
+        }),
+      };
       const { subject, text } = shiftSubmittedToAdmin(
         submitterName,
-        shiftLines,
+        adminPayload,
       );
       await sendEmail(adminEmail, subject, text);
     }
