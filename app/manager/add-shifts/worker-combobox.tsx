@@ -20,6 +20,7 @@ type Worker = {
   id: string;
   email: string;
   full_name: string;
+  employee_number?: string | null;
 };
 
 type Props = {
@@ -83,14 +84,14 @@ export function WorkerCombobox({
           className="w-[var(--radix-popover-trigger-width)] p-0"
         >
           <Command>
-            <CommandInput placeholder="חיפוש לפי שם / מייל..." />
+            <CommandInput placeholder="חיפוש לפי שם / מייל / מספר עובד..." />
             <CommandList>
               <CommandEmpty>לא נמצאו עובדים</CommandEmpty>
               <CommandGroup>
                 {workers.map((w) => (
                   <CommandItem
                     key={w.id}
-                    value={`${w.full_name} ${w.email}`}
+                    value={`${w.full_name} ${w.email} ${w.employee_number ?? ""}`}
                     onSelect={() => {
                       onChange(w.id);
                       setOpen(false);
@@ -100,6 +101,11 @@ export function WorkerCombobox({
                       <div className="flex flex-col">
                         <span className="font-medium">{w.full_name}</span>
                         <span className="text-xs text-slate-500">{w.email}</span>
+                        {w.employee_number ? (
+                          <span className="text-xs text-slate-500">
+                            מס' עובד: {w.employee_number}
+                          </span>
+                        ) : null}
                       </div>
 
                       <Check

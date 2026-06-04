@@ -6,6 +6,7 @@ type UserRow = {
   id: string;
   email: string;
   full_name: string;
+  employee_number?: string | null;
 };
 
 export default async function ManagerAddShiftsPage() {
@@ -31,7 +32,7 @@ export default async function ManagerAddShiftsPage() {
   // Fetch users from DB
   const { data, error } = await supabase
     .from("users")
-    .select("id,email,full_name")
+    .select("id,email,full_name,employee_number")
     .order("full_name", { ascending: true });
 
   if (error) throw new Error(error.message);
@@ -40,9 +41,8 @@ export default async function ManagerAddShiftsPage() {
     id: u.id,
     email: u.email,
     full_name: u.full_name,
+    employee_number: u.employee_number,
   }));
-
-  console.log("Users:", users);
 
   return <ManagerAddShiftsClient workers={users} />;
  

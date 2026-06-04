@@ -20,6 +20,7 @@ type WorkerProfile = {
   city: string;
 
   id_number: string;
+  employee_number: string | null;
 
   bank_name: string;
   bank_branch_number: string;
@@ -72,6 +73,7 @@ export default function WorkerSettingsClient({
     city: initialUserData.city ?? "",
 
     id_number: initialUserData.id_number ?? "",
+    employee_number: initialUserData.employee_number ?? "",
 
     bank_name: initialUserData.bank_name ?? "",
     bank_branch_number: initialUserData.bank_branch_number ?? "",
@@ -204,6 +206,24 @@ export default function WorkerSettingsClient({
               <div className="flex items-center gap-2 mt-1.5">
                 <Input
                   value={currentData.full_name ?? ""}
+                  readOnly
+                  className="bg-gray-50 text-gray-600 cursor-not-allowed border-gray-200"
+                />
+                <Badge
+                  variant="secondary"
+                  className="bg-gray-100 text-gray-600 text-xs"
+                >
+                  קריאה בלבד
+                </Badge>
+              </div>
+            </div>
+
+            {/* Employee Number - Read-only */}
+            <div>
+              <Label className="text-black font-medium">מספר עובד</Label>
+              <div className="flex items-center gap-2 mt-1.5">
+                <Input
+                  value={currentData.employee_number ?? ""}
                   readOnly
                   className="bg-gray-50 text-gray-600 cursor-not-allowed border-gray-200"
                 />

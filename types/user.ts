@@ -21,6 +21,7 @@ export type User = {
 
   // 🔹 NEW FIELDS
   id_number: string
+  employee_number: string | null
   car_number: string | null
   emergency_contact_name: string
   emergency_contact_phone: string

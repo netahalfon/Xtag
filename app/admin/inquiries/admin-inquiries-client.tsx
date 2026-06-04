@@ -164,6 +164,9 @@ export function AdminInquiriesClient({
                     </p>
                     <p className="text-xs text-black/55 truncate mt-0.5">
                       {inq.worker?.full_name ?? "לא ידוע"}
+                      {inq.worker?.employee_number
+                        ? ` · מס' עובד: ${inq.worker.employee_number}`
+                        : ""}
                     </p>
                   </div>
                   <span className="shrink-0 text-xs text-black/50 tabular-nums">

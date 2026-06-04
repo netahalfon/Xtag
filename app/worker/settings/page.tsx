@@ -21,6 +21,7 @@ export default async function WorkerSettingsPage() {
       birth_date,
       city,
       id_number,
+      employee_number,
       bank_name,
       bank_branch_number,
       bank_account_number,

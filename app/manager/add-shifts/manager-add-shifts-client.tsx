@@ -36,6 +36,7 @@ type Worker = {
   id: string;
   email: string;
   full_name: string;
+  employee_number?: string | null;
 };
 
 type AssignedWorker = {

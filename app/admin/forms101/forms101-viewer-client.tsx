@@ -3,11 +3,13 @@
 import { useState } from "react";
 import type React from "react";
 import { getForm101SignedUrlByFullPath } from "./actions";
+import { WorkerCombobox } from "@/app/manager/add-shifts/worker-combobox";
 
 type Worker = {
   id: string;
   email: string;
   full_name: string;
+  employee_number: string | null;
   form101_pdf_path: string | null;
 };
 
@@ -68,20 +70,13 @@ export default function Forms101ViewerClient({ workers }: { workers: Worker[] })
           <form onSubmit={handleFetch}>
             <div className="row g-3">
               <div className="col-12">
-                <label className="form-label">עובד</label>
-                <select
-                  className="form-select"
+                <WorkerCombobox
+                  workers={workers}
                   value={selectedWorkerId}
-                  onChange={(e) => setSelectedWorkerId(e.target.value)}
+                  onChange={setSelectedWorkerId}
                   disabled={isLoading}
-                >
-                  <option value="">בחרי עובד...</option>
-                  {workers.map((w) => (
-                    <option key={w.id} value={w.id}>
-                      {w.full_name} ({w.email})
-                    </option>
-                  ))}
-                </select>
+                  placeholder="בחרי עובד..."
+                />
 
                 {selectedWorkerId && (
                   <div className="form-text">
