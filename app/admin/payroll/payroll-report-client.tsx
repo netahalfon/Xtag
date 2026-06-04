@@ -27,6 +27,13 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Download } from "lucide-react";
+import dynamic from "next/dynamic";
+
+const TruncatedTooltip = dynamic(
+  () =>
+    import("@/components/truncated-tooltip").then((m) => m.TruncatedTooltip),
+  { ssr: false },
+);
 
 export interface PayrollRow {
   fullName: string;
@@ -38,6 +45,8 @@ export interface PayrollRow {
   amountToPay: number;
   travelSum: number;
   totalSum: number;
+  totalHours: number;
+  totalShifts: number;
 }
 
 interface PayrollReportClientProps {
@@ -112,8 +121,10 @@ export function PayrollReportClient({
       amountToPay: acc.amountToPay + row.amountToPay,
       travelSum: acc.travelSum + row.travelSum,
       totalSum: acc.totalSum + row.totalSum,
+      totalHours: acc.totalHours + row.totalHours,
+      totalShifts: acc.totalShifts + row.totalShifts,
     }),
-    { amountToPay: 0, travelSum: 0, totalSum: 0 },
+    { amountToPay: 0, travelSum: 0, totalSum: 0, totalHours: 0, totalShifts: 0 },
   );
 
   // Download CSV function
@@ -125,6 +136,8 @@ export function PayrollReportClient({
       'ת"ז',
       "מס' עובד",
       "פרטי חשבון בנק",
+      "סהכ שעות",
+      "סהכ משמרות",
       "סכום לתשלום",
       "סכום נסיעות",
       "סכום סופי",
@@ -139,6 +152,8 @@ export function PayrollReportClient({
           `"${row.idNumber}"`,
           `"${row.employeeNumber}"`,
           `"${row.bankDetails}"`,
+          row.totalHours,
+          row.totalShifts,
           row.amountToPay,
           row.travelSum,
           row.totalSum,
@@ -152,6 +167,8 @@ export function PayrollReportClient({
         '""',
         '""',
         '""',
+        totals.totalHours,
+        totals.totalShifts,
         totals.amountToPay,
         totals.travelSum,
         totals.totalSum,
@@ -265,14 +282,15 @@ export function PayrollReportClient({
               <TableHeader>
                 <TableRow>
                   <TableHead className="text-right">שם מלא</TableHead>
-                  <TableHead className="text-right">טלפון</TableHead>
-                  <TableHead className="text-right">מייל</TableHead>
-                  <TableHead className="text-right">ת"ז</TableHead>
+                  <TableHead className="text-right w-24">טלפון</TableHead>
+                  <TableHead className="text-right w-28">מייל</TableHead>
+                  <TableHead className="text-right w-24">ת"ז</TableHead>
                   <TableHead className="text-right">מס' עובד</TableHead>
                   <TableHead className="text-right">פרטי חשבון בנק</TableHead>
+                  <TableHead className="text-right">סהכ שעות</TableHead>
+                  <TableHead className="text-right">סהכ משמרות</TableHead>
                   <TableHead className="text-right">סכום לתשלום</TableHead>
-                  <TableHead className="text-right">סכום נסיעות</TableHead>
-                  <TableHead className="text-right">סכום סופי</TableHead>
+                  <TableHead className="text-right">סכום סופי (כולל נסיעות)</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -281,19 +299,24 @@ export function PayrollReportClient({
                     <TableCell className="font-medium">
                       {row.fullName}
                     </TableCell>
-                    <TableCell>{row.phone}</TableCell>
-                    <TableCell>{row.email}</TableCell>
-                    <TableCell>{row.idNumber}</TableCell>
+                    <TableCell className="w-24 max-w-24">
+                      <TruncatedTooltip text={row.phone} />
+                    </TableCell>
+                    <TableCell className="w-28 max-w-28">
+                      <TruncatedTooltip text={row.email} />
+                    </TableCell>
+                    <TableCell className="w-24 max-w-24">
+                      <TruncatedTooltip text={row.idNumber} />
+                    </TableCell>
                     <TableCell>{row.employeeNumber}</TableCell>
                     <TableCell className="text-sm">{row.bankDetails}</TableCell>
+                    <TableCell>{row.totalHours.toLocaleString("he-IL")}</TableCell>
+                    <TableCell>{row.totalShifts.toLocaleString("he-IL")}</TableCell>
                     <TableCell className="font-medium">
-                      ₪{row.amountToPay.toLocaleString("he-IL")}
-                    </TableCell>
-                    <TableCell>
-                      ₪{row.travelSum.toLocaleString("he-IL")}
+                      {row.amountToPay.toLocaleString("he-IL")}
                     </TableCell>
                     <TableCell className="font-medium">
-                      ₪{row.totalSum.toLocaleString("he-IL")}
+                      {row.totalSum.toLocaleString("he-IL")}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -304,13 +327,16 @@ export function PayrollReportClient({
                     סה"כ
                   </TableCell>
                   <TableCell className="font-bold">
-                    ₪{totals.amountToPay.toLocaleString("he-IL")}
+                    {totals.totalHours.toLocaleString("he-IL")}
                   </TableCell>
                   <TableCell className="font-bold">
-                    ₪{totals.travelSum.toLocaleString("he-IL")}
+                    {totals.totalShifts.toLocaleString("he-IL")}
                   </TableCell>
                   <TableCell className="font-bold">
-                    ₪{totals.totalSum.toLocaleString("he-IL")}
+                    {totals.amountToPay.toLocaleString("he-IL")}
+                  </TableCell>
+                  <TableCell className="font-bold">
+                    {totals.totalSum.toLocaleString("he-IL")}
                   </TableCell>
                 </TableRow>
               </TableFooter>

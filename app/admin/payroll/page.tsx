@@ -40,7 +40,7 @@ export default async function Forms101Page() {
 
   return (
     <main className="min-h-screen bg-muted/30 p-4 md:p-8">
-      <div className="mx-auto max-w-7xl">
+      <div className="mx-auto max-w-400">
         <PayrollReportClient initialYear={year} initialMonth={month} initialRows={initialRows} />
       </div>
     </main>

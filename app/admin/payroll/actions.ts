@@ -16,6 +16,8 @@ type PayrollReportRpcRow = {
   amount_to_pay: number | string | null;
   travel_sum: number | string | null;
   total_sum: number | string | null;
+  total_hours: number | string | null;
+  total_shifts: number | string | null;
 };
 
 function getMonthRange(year: number, month: number) {
@@ -41,7 +43,7 @@ export async function getPayrollReport({
   const supabase = await createClient();
   const { from_date, to_date } = getMonthRange(year, month);
 
-  const { data, error } = await supabase.rpc("payroll_report_v2", {
+  const { data, error } = await supabase.rpc("payroll_report_v3", {
     from_date,
     to_date,
   });
@@ -56,11 +58,13 @@ export async function getPayrollReport({
     email: row.email ?? "",
     idNumber: row.id_number ?? "",
     employeeNumber: row.employee_number?.toString() ?? "",
-    bankDetails: `בנק: ${row.bank_name ?? ""} | סניף: ${
-      row.bank_branch_number ?? ""
-    } | חשבון: ${row.bank_account_number ?? ""}`,
+    bankDetails: `${row.bank_name ?? ""} | ${row.bank_branch_number ?? ""} | ${
+      row.bank_account_number ?? ""
+    }`,
     amountToPay: Number(row.amount_to_pay ?? 0),
     travelSum: Number(row.travel_sum ?? 0),
     totalSum: Number(row.total_sum ?? 0),
+    totalHours: Number(row.total_hours ?? 0),
+    totalShifts: Number(row.total_shifts ?? 0),
   }));
 }
