@@ -45,7 +45,7 @@ export async function createInquiry(input: {
   }
 
   try {
-    const adminEmail = process.env.ADMIN_EMAIL;
+    const adminEmail = process.env.EMAIL;
     if (adminEmail) {
       const { data: profile } = await supabase
         .from("users")

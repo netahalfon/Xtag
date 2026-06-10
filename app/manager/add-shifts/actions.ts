@@ -218,7 +218,7 @@ export async function createShiftsAction(input: CreateShiftsInput) {
     }
 
     // Task #3 — notify system admin
-    const adminEmail = process.env.ADMIN_EMAIL;
+    const adminEmail = process.env.EMAIL;
     if (adminEmail) {
       const adminPayload = {
         event_name: input.eventName || null,

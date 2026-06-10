@@ -8,9 +8,9 @@ export async function notifyTamuzNewEmployee(employee: {
   id_number: string;
   email: string;
 }) {
-  const tamuzEmail = process.env.ADMIN_EMAIL;
+  const tamuzEmail = process.env.EMAIL;
   if (!tamuzEmail) {
-    console.error("[notifyTamuzNewEmployee] ADMIN_EMAIL not configured");
+    console.error("[notifyTamuzNewEmployee] EMAIL not configured");
     return { ok: false };
   }
 
