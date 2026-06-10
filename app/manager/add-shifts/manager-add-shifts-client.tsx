@@ -334,27 +334,13 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
 
           {/* Assigned Workers Section (לוק V0 + השגיאות שלך) */}
           <Card className="p-6 border-2 border-orange-100 dark:border-orange-900/30 bg-white dark:bg-slate-900">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-2">
-                <div className="rounded-lg bg-orange-100 dark:bg-orange-900/30 p-2">
-                  <Users className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-                </div>
-                <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-50">
-                  עובדים משובצים
-                </h2>
+            <div className="flex items-center gap-2 mb-6">
+              <div className="rounded-lg bg-orange-100 dark:bg-orange-900/30 p-2">
+                <Users className="h-5 w-5 text-orange-600 dark:text-orange-400" />
               </div>
-
-              <Button
-                type="button"
-                onClick={addWorker}
-                variant="outline"
-                size="sm"
-                className="border-orange-200 dark:border-orange-800 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 bg-transparent"
-                disabled={isSubmitting}
-              >
-                <Plus className="h-4 w-4 ml-2" />
-                הוסף עובד
-              </Button>
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-50">
+                עובדים משובצים
+              </h2>
             </div>
 
             <div className="space-y-4">
@@ -489,6 +475,20 @@ export default function ManagerAddShiftsClient({ workers }: Props) {
                   )}
                 </div>
               ))}
+            </div>
+
+            <div className="mt-4 flex justify-center">
+              <Button
+                type="button"
+                onClick={addWorker}
+                variant="outline"
+                size="sm"
+                className="border-orange-200 dark:border-orange-800 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 bg-transparent"
+                disabled={isSubmitting}
+              >
+                <Plus className="h-4 w-4 ml-2" />
+                הוסף עובד
+              </Button>
             </div>
           </Card>
 
