@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import dynamic from "next/dynamic";
 import { Card } from "@/components/ui/card";
 import {
   Select,
@@ -10,12 +9,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-const TruncatedTooltip = dynamic(
-  () =>
-    import("@/components/truncated-tooltip").then((m) => m.TruncatedTooltip),
-  { ssr: false },
-);
 
 interface Shift {
   id: string;
@@ -31,7 +24,6 @@ interface Shift {
   travel_amount?: number;
   shift_pay_total?: number;
   status: "pending" | "approved" | "rejected";
-  notes?: string | null;
 }
 
 interface ShiftsListProps {
@@ -208,13 +200,6 @@ export function ShiftsList({ shifts, title = "המשמרות שלי" }: ShiftsLi
                 </span>
               </div>
 
-              {shift.notes?.trim() && (
-                <div className="text-sm text-black/80">
-                  <span className="font-semibold">הערה: </span>
-                  <span className="whitespace-pre-wrap">{shift.notes}</span>
-                </div>
-              )}
-
               <div className="grid grid-cols-3 gap-2 text-xs text-black/70">
                 <div className="text-center">
                   <div className="text-black/50">תעריף</div>
@@ -288,9 +273,6 @@ export function ShiftsList({ shifts, title = "המשמרות שלי" }: ShiftsLi
                     מנהל
                   </th>
                   <th className="p-3 text-right text-sm font-bold text-black">
-                    הערות
-                  </th>
-                  <th className="p-3 text-right text-sm font-bold text-black">
                     התחלה
                   </th>
                   <th className="p-3 text-right text-sm font-bold text-black">
@@ -338,13 +320,6 @@ export function ShiftsList({ shifts, title = "המשמרות שלי" }: ShiftsLi
                     </td>
                     <td className="p-3 text-sm text-black">{shift.location}</td>
                     <td className="p-3 text-sm text-black">{shift.manager}</td>
-                    <td className="p-3 text-sm text-black max-w-40">
-                      {shift.notes?.trim() ? (
-                        <TruncatedTooltip text={shift.notes} />
-                      ) : (
-                        <span className="text-black/40">—</span>
-                      )}
-                    </td>
                     <td className="p-3 text-sm text-black">
                       {shift.start_time || "-"}
                     </td>

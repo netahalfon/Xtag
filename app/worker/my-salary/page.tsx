@@ -26,7 +26,9 @@ export default async function WorkerMySalaryPage() {
   // ✅ שליפת המשמרות של העובד
   const { data: shifts, error: shiftsErr } = await supabase
     .from("shifts")
-    .select("*")
+    .select(
+      "id, shift_date, location, event_name, manager, start_time, end_time, total_hours, hourly_rate, wage_bonus, travel_amount, shift_pay_total, status",
+    )
     .eq("worker_id", user.id)
     .order("shift_date", { ascending: false });
 
