@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
-  Table,
   TableBody,
   TableCell,
   TableHead,
@@ -172,53 +171,53 @@ export function AllShifts({ shifts: initialShifts }: AllShiftsProps) {
         </div>
 
         {/* Shifts Table */}
-        <div className="rounded-lg border border-border overflow-x-auto">
-          <Table className="table-fixed w-full">
+        <div className="rounded-lg border border-border">
+          <table className="table-fixed w-full caption-bottom text-sm">
             <TableHeader>
               <TableRow className="bg-muted">
-                <TableHead className="text-right text-foreground font-semibold w-[140px]">
+                <TableHead className="sticky top-20 z-30 bg-muted text-right text-foreground font-semibold w-[140px] shadow-sm">
                   תאריך
                 </TableHead>
-                <TableHead className="text-right text-foreground font-semibold w-[200px]">
+                <TableHead className="sticky top-20 z-30 bg-muted text-right text-foreground font-semibold w-[200px] shadow-sm">
                   שם הכנס
                 </TableHead>
-                <TableHead className="text-right text-foreground font-semibold w-32.5">
+                <TableHead className="sticky top-20 z-30 bg-muted text-right text-foreground font-semibold w-32.5 shadow-sm">
                   שם העובד
                 </TableHead>
-                <TableHead className="text-right text-foreground font-semibold w-21.25">
+                <TableHead className="sticky top-20 z-30 bg-muted text-right text-foreground font-semibold w-21.25 shadow-sm">
                   מספר עובד
                 </TableHead>
-                <TableHead className="text-right text-foreground font-semibold w-17.5">
+                <TableHead className="sticky top-20 z-30 bg-muted text-right text-foreground font-semibold w-17.5 shadow-sm">
                   תפקיד
                 </TableHead>
-                <TableHead className="text-right text-foreground font-semibold w-20">
+                <TableHead className="sticky top-20 z-30 bg-muted text-right text-foreground font-semibold w-20 shadow-sm">
                   התחלה
                 </TableHead>
-                <TableHead className="text-right text-foreground font-semibold w-20">
+                <TableHead className="sticky top-20 z-30 bg-muted text-right text-foreground font-semibold w-20 shadow-sm">
                   סיום
                 </TableHead>
-                <TableHead className="text-right text-foreground font-semibold w-18.75">
+                <TableHead className="sticky top-20 z-30 bg-muted text-right text-foreground font-semibold w-18.75 shadow-sm">
                   {'סה"כ שעות'}
                 </TableHead>
-                <TableHead className="text-right text-foreground font-semibold w-18.75">
+                <TableHead className="sticky top-20 z-30 bg-muted text-right text-foreground font-semibold w-18.75 shadow-sm">
                   שכר שעתי
                 </TableHead>
-                <TableHead className="text-right text-foreground font-semibold w-16.25">
+                <TableHead className="sticky top-20 z-30 bg-muted text-right text-foreground font-semibold w-16.25 shadow-sm">
                   בונוס
                 </TableHead>
-                <TableHead className="text-right text-foreground font-semibold w-20">
+                <TableHead className="sticky top-20 z-30 bg-muted text-right text-foreground font-semibold w-20 shadow-sm">
                   נסיעות
                 </TableHead>
-                <TableHead className="text-right text-foreground font-semibold w-22.5">
+                <TableHead className="sticky top-20 z-30 bg-muted text-right text-foreground font-semibold w-22.5 shadow-sm">
                   {'סה"כ '}
                 </TableHead>
-                <TableHead className="text-right text-foreground font-semibold w-18.75">
+                <TableHead className="sticky top-20 z-30 bg-muted text-right text-foreground font-semibold w-18.75 shadow-sm">
                   סטטוס
                 </TableHead>
-                <TableHead className="text-right text-foreground font-semibold w-40">
+                <TableHead className="sticky top-20 z-30 bg-muted text-right text-foreground font-semibold w-40 shadow-sm">
                   הערות
                 </TableHead>
-                <TableHead className="text-right text-foreground font-semibold w-12.5">
+                <TableHead className="sticky top-20 z-30 bg-muted text-right text-foreground font-semibold w-12.5 shadow-sm">
                   <span className="sr-only">פעולות</span>
                 </TableHead>
               </TableRow>
@@ -317,7 +316,7 @@ export function AllShifts({ shifts: initialShifts }: AllShiftsProps) {
                 })
               )}
             </TableBody>
-          </Table>
+          </table>
         </div>
       </div>
 

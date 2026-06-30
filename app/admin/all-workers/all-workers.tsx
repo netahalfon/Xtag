@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react"
 import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Search } from "lucide-react"
 import type { User } from "@/types/user"
 import { WorkerDetails } from "./worker-details"
@@ -59,7 +59,7 @@ export function AllWorkers({ users }: AllWorkersProps) {
       <div className="mx-auto max-w-7xl">
         <h1 className="mb-8 text-3xl font-bold text-black">כל העובדים</h1>
 
-        <div className="mb-6 relative">
+        <div className="sticky top-20 z-40 -mx-1 mb-4 bg-white px-1 py-3 relative">
           <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <Input
             type="text"
@@ -70,16 +70,16 @@ export function AllWorkers({ users }: AllWorkersProps) {
           />
         </div>
 
-        <div className="rounded-lg border border-gray-200 overflow-hidden">
-          <Table>
+        <div className="rounded-lg border border-gray-200">
+          <table className="w-full caption-bottom text-sm">
             <TableHeader>
               <TableRow className="bg-gray-50">
-                <TableHead className="text-right text-black font-semibold">שם</TableHead>
-                <TableHead className="text-right text-black font-semibold">מספר עובד</TableHead>
-                <TableHead className="text-right text-black font-semibold">אימייל</TableHead>
-                <TableHead className="text-right text-black font-semibold">תפקיד</TableHead>
-                <TableHead className="text-right text-black font-semibold">שכר (רגיל)</TableHead>
-                <TableHead className="text-right text-black font-semibold">שכר (מנהל)</TableHead>
+                <TableHead className="sticky top-[144px] z-30 bg-gray-50 text-right text-black font-semibold shadow-sm">שם</TableHead>
+                <TableHead className="sticky top-[144px] z-30 bg-gray-50 text-right text-black font-semibold shadow-sm">מספר עובד</TableHead>
+                <TableHead className="sticky top-[144px] z-30 bg-gray-50 text-right text-black font-semibold shadow-sm">אימייל</TableHead>
+                <TableHead className="sticky top-[144px] z-30 bg-gray-50 text-right text-black font-semibold shadow-sm">תפקיד</TableHead>
+                <TableHead className="sticky top-[144px] z-30 bg-gray-50 text-right text-black font-semibold shadow-sm">שכר (רגיל)</TableHead>
+                <TableHead className="sticky top-[144px] z-30 bg-gray-50 text-right text-black font-semibold shadow-sm">שכר (מנהל)</TableHead>
               </TableRow>
             </TableHeader>
 
@@ -113,7 +113,7 @@ export function AllWorkers({ users }: AllWorkersProps) {
                 ))
               )}
             </TableBody>
-          </Table>
+          </table>
         </div>
       </div>
     </div>

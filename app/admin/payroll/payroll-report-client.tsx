@@ -17,7 +17,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Table,
   TableBody,
   TableCell,
   TableHead,
@@ -278,19 +277,19 @@ export function PayrollReportClient({
         {/* Table */}
         {!isLoading && !error && rows.length > 0 && (
           <div className="rounded-lg border">
-            <Table>
+            <table className="w-full caption-bottom text-sm">
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-right">שם מלא</TableHead>
-                  <TableHead className="text-right w-24">טלפון</TableHead>
-                  <TableHead className="text-right w-28">מייל</TableHead>
-                  <TableHead className="text-right w-24">ת"ז</TableHead>
-                  <TableHead className="text-right">מס' עובד</TableHead>
-                  <TableHead className="text-right">פרטי חשבון בנק</TableHead>
-                  <TableHead className="text-right">סהכ שעות</TableHead>
-                  <TableHead className="text-right">סהכ משמרות</TableHead>
-                  <TableHead className="text-right">סכום לתשלום</TableHead>
-                  <TableHead className="text-right">סכום סופי (כולל נסיעות)</TableHead>
+                  <TableHead className="sticky top-20 z-30 bg-background text-right shadow-sm">שם מלא</TableHead>
+                  <TableHead className="sticky top-20 z-30 bg-background text-right w-24 shadow-sm">טלפון</TableHead>
+                  <TableHead className="sticky top-20 z-30 bg-background text-right w-28 shadow-sm">מייל</TableHead>
+                  <TableHead className="sticky top-20 z-30 bg-background text-right w-24 shadow-sm">ת"ז</TableHead>
+                  <TableHead className="sticky top-20 z-30 bg-background text-right shadow-sm">מס' עובד</TableHead>
+                  <TableHead className="sticky top-20 z-30 bg-background text-right shadow-sm">פרטי חשבון בנק</TableHead>
+                  <TableHead className="sticky top-20 z-30 bg-background text-right shadow-sm">סהכ שעות</TableHead>
+                  <TableHead className="sticky top-20 z-30 bg-background text-right shadow-sm">סהכ משמרות</TableHead>
+                  <TableHead className="sticky top-20 z-30 bg-background text-right shadow-sm">סכום לתשלום</TableHead>
+                  <TableHead className="sticky top-20 z-30 bg-background text-right shadow-sm">סכום סופי (כולל נסיעות)</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -340,7 +339,7 @@ export function PayrollReportClient({
                   </TableCell>
                 </TableRow>
               </TableFooter>
-            </Table>
+            </table>
           </div>
         )}
       </CardContent>
