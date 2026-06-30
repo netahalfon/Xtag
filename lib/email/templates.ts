@@ -39,7 +39,6 @@ function formatShiftBlock(s: ShiftLine): string {
     `שעות: ${s.start_time}–${s.end_time} (סה"כ ${s.total_hours})`,
     `תפקיד: ${roleHebrew(s.role)}`,
     `מיקום: ${s.location}`,
-    `הערות: ${s.notes?.trim() ? s.notes : "—"}`,
     `סטטוס: ${statusHebrew(s.status)}`,
   ];
   if (s.shift_pay_total != null) {
